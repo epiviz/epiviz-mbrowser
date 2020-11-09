@@ -1,6 +1,9 @@
 {
   "name": "epiviz-mbrowser",
   "main": "epiviz-mbrowser.html",
+  "authors": [
+    "Jayaram Kancherla <jayaram.kancherla@gmail.com>"
+  ],
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "iron-ajax": "PolymerElements/iron-ajax#^3.0.1",
@@ -28,5 +31,16 @@
   "resolutions": {
     "polymer": "^2.0.0",
     "iron-ajax": "1 - 2"
-  }
+  },
+  "description": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
 }
