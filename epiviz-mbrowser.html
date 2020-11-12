@@ -97,7 +97,6 @@
     </style>
     <!-- local DOM goes here -->
     <iron-ajax
-      auto
       id="getCollections"
       method="GET"
       url="[[msApi]]"
@@ -400,6 +399,8 @@
             var self = this;
             var data = e.detail.response;
             console.log(data);
+            
+            var envElement = self._parentContainer;
 
             var pdata = [];
 
@@ -431,128 +432,6 @@
             });
 
             self.measurementsRaw = pdata;
-        }
-
-        /**
-         * Get Available Chart Types
-         */
-        _getCharts(chartTypes, parentContainer) {
-            if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
-                delete chartTypes["EpivizNavigation"];
-            }
-            return Object.keys(chartTypes);
-        }
-
-        _isEnvironment(chartTypes) {
-            return false;//chartTypes.indexOf("EpivizNavigation") !== -1;
-        }
-
-        _tableDataExists(tableData) {
-            return tableData.length > 0;
-        }
-
-        _tableDataExistsCollection(tableData) {
-            return this.selectedCollection && this.selectedCollection != "" ? this._tableDataExists(tableData) : false;
-        }
-
-        selectedCollectionChanged(newVal, oldVal) {
-            var self = this;
-
-            if (this.selectedCollection && this.selectedCollection != "") {
-                self.$.modal.refit();
-                // self.$.modal.center();
-            }
-        }
-
-        _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
-            if (selectedChart !== null && this._charts.includes(selectedChart)) {
-                if (this.tabSelected === 1 && this.selectedExistingMeasurements && this.selectedExistingMeasurements.length > 0) {
-                    return true;
-                }
-
-                if (this.tabSelected === 0 && this.selectedMeasurements && this.selectedMeasurements.length > 0) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * API to add a chart
-         * @param {chartType}: chart type to add/create. Must be one of the defined chart types in _chartTypes attribute.
-         * @param {measurements}: measurements to use.
-         * TODO:
-         * @param {data}: data for the chart (for json-based-charts).
-         */
-        _addChart(chartType, measurements) {
-
-            var self = this;
-            var envElement = self.parentNode.parentNode.parentNode.parentNode.nodeName == "EPIVIZ-NAVIGATION" ? self.parentNode.parentNode.parentNode.parentNode : self.parentNode.parentNode.parentNode;
-            var envElement = self._parentContainer;
-
-            var chartElem = document.createElement(self._chartTypes[chartType]);
-            chartElem.slot = "charts";
-            chartElem.range = envElement.range;
-            var chartElemType = chartElem._createChart();
-
-            chartElem.setAttribute("measurements", JSON.stringify(measurements));
-            envElement.appendChild(chartElem);
-        }
-
-        _refitModal() {
-            setTimeout(() => this.$.modal.refit(), 0);
-        }
-
-        _addNavigation() {
-            var envElement = this._parentContainer;
-            var elem = document.createElement("epiviz-navigation");
-
-            elem.setAttribute("chr", "chr19");
-            elem.setAttribute("start", 10084603);
-            elem.setAttribute("end", 10312571);
-            elem.setAttribute("no-logo", true);
-            elem.slot = "charts";
-
-            envElement.appendChild(elem);
-        }
-
-        _getExistingChartMeasurements(envElement) {
-            var self = this;
-            var currentCharts = [];
-            var currentChartObj = {};
-            var currChartCollections = [];
-
-            if(envElement) {
-              let navChildren =
-                  Polymer.FlattenedNodesObserver.getFlattenedNodes(envElement).filter(n => n.nodeType === Node.ELEMENT_NODE);
-              var numChildren = navChildren.length;
-              for (var index = 0; index < numChildren; index++) {
-                  var currentChild = navChildren[index];
-                  currentCharts.push({ "node": currentChild.nodeName, "id": currentChild.plotId });
-                  currentChartObj[currentChild.plotId] = currentChild.measurements;
-                  if (currentChild.nodeName != "EPIVIZ-GENES-TRACK") {
-                      currentChild.measurements.forEach(function(m) {
-                          var tempM = JSON.parse(JSON.stringify(m));
-                          if (!tempM["annotation"]) {
-                              tempM["annotation"] = {};
-                          }
-                          tempM["annotation"]["collection"] = currentChild.plotId;
-                          currChartCollections.push(tempM);
-                      });
-                  }
-              }
-            }
-
-            return {
-              "currentChartObj": currentChartObj,
-              "currentCharts": currentCharts,
-              "currChartCollections": currChartCollections
-            }
-        }
-
-        _showModal(event) {
-            var self = this;
-            var envElement = this._parentContainer;
 
             var tcurrChart = self._getExistingChartMeasurements(envElement);
             this.currentChartObj = tcurrChart.currentChartObj;
@@ -730,6 +609,130 @@
 
             self.set("_jsonMeasurements", nData);
             self.$.modal.refit();
+        }
+
+        /**
+         * Get Available Chart Types
+         */
+        _getCharts(chartTypes, parentContainer) {
+            if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
+                delete chartTypes["EpivizNavigation"];
+            }
+            return Object.keys(chartTypes);
+        }
+
+        _isEnvironment(chartTypes) {
+            return false;//chartTypes.indexOf("EpivizNavigation") !== -1;
+        }
+
+        _tableDataExists(tableData) {
+            return tableData.length > 0;
+        }
+
+        _tableDataExistsCollection(tableData) {
+            return this.selectedCollection && this.selectedCollection != "" ? this._tableDataExists(tableData) : false;
+        }
+
+        selectedCollectionChanged(newVal, oldVal) {
+            var self = this;
+
+            if (this.selectedCollection && this.selectedCollection != "") {
+                self.$.modal.refit();
+                // self.$.modal.center();
+            }
+        }
+
+        _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
+            if (selectedChart !== null && this._charts.includes(selectedChart)) {
+                if (this.tabSelected === 1 && this.selectedExistingMeasurements && this.selectedExistingMeasurements.length > 0) {
+                    return true;
+                }
+
+                if (this.tabSelected === 0 && this.selectedMeasurements && this.selectedMeasurements.length > 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * API to add a chart
+         * @param {chartType}: chart type to add/create. Must be one of the defined chart types in _chartTypes attribute.
+         * @param {measurements}: measurements to use.
+         * TODO:
+         * @param {data}: data for the chart (for json-based-charts).
+         */
+        _addChart(chartType, measurements) {
+
+            var self = this;
+            var envElement = self.parentNode.parentNode.parentNode.parentNode.nodeName == "EPIVIZ-NAVIGATION" ? self.parentNode.parentNode.parentNode.parentNode : self.parentNode.parentNode.parentNode;
+            var envElement = self._parentContainer;
+
+            var chartElem = document.createElement(self._chartTypes[chartType]);
+            chartElem.slot = "charts";
+            chartElem.range = envElement.range;
+            var chartElemType = chartElem._createChart();
+
+            chartElem.setAttribute("measurements", JSON.stringify(measurements));
+            envElement.appendChild(chartElem);
+        }
+
+        _refitModal() {
+            setTimeout(() => this.$.modal.refit(), 0);
+        }
+
+        _addNavigation() {
+            var envElement = this._parentContainer;
+            var elem = document.createElement("epiviz-navigation");
+
+            elem.setAttribute("chr", "chr19");
+            elem.setAttribute("start", 10084603);
+            elem.setAttribute("end", 10312571);
+            elem.setAttribute("no-logo", true);
+            elem.slot = "charts";
+
+            envElement.appendChild(elem);
+        }
+
+        _getExistingChartMeasurements(envElement) {
+            var self = this;
+            var currentCharts = [];
+            var currentChartObj = {};
+            var currChartCollections = [];
+
+            if(envElement) {
+              let navChildren =
+                  Polymer.FlattenedNodesObserver.getFlattenedNodes(envElement).filter(n => n.nodeType === Node.ELEMENT_NODE);
+              var numChildren = navChildren.length;
+              for (var index = 0; index < numChildren; index++) {
+                  var currentChild = navChildren[index];
+                  currentCharts.push({ "node": currentChild.nodeName, "id": currentChild.plotId });
+                  currentChartObj[currentChild.plotId] = currentChild.measurements;
+                  if (currentChild.nodeName != "EPIVIZ-GENES-TRACK") {
+                      currentChild.measurements.forEach(function(m) {
+                          var tempM = JSON.parse(JSON.stringify(m));
+                          if (!tempM["annotation"]) {
+                              tempM["annotation"] = {};
+                          }
+                          tempM["annotation"]["collection"] = currentChild.plotId;
+                          currChartCollections.push(tempM);
+                      });
+                  }
+              }
+            }
+
+            return {
+              "currentChartObj": currentChartObj,
+              "currentCharts": currentCharts,
+              "currChartCollections": currChartCollections
+            }
+        }
+
+        _showModal(event) {
+            var self = this;
+            var envElement = this._parentContainer;
+
+            this.$.getCollections.generateRequest();
         }
 
         _close() {
