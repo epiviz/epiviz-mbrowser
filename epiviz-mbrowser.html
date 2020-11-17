@@ -20,11 +20,37 @@
 <link rel="import" href="../iron-pages/iron-pages.html" />
 <link rel="import" href="../paper-dropdown/paper-dropdown.html" />
 
+<script>
+  // window.addEventListener('WebComponentsReady', function() {
+      document.addEventListener('mBrowserReady', function() {
+          var collection = getUrlParameter("collection");
+          if(collection) {
+            // document.querySelector("epiviz-measurement-browser").loadCollection(collection);
+              document.querySelector("epiviz-app").shadowRoot.querySelector("epiviz-navigation")
+                .shadowRoot.querySelector("epiviz-measurement-browser").loadCollection(collection);
+          }
+      });
+  // });
+
+  function getUrlParameter(sParam) {
+      var currPage = decodeURIComponent(window.location.search.substring(1));
+      var pageVars = currPage.split('&');
+
+      for (var i = 0; i < pageVars.length; i++) {
+          var pageParamName = pageVars[i].split('=');
+
+          if (pageParamName[0] === sParam) {
+              return pageParamName[1] === undefined ? true : pageParamName[1];
+          }
+      }
+  };
+</script>
+
+
 <!--
 `<epiviz-measurement-browser>`
     Creates an Instance of the measurement browser.
 -->
-
 <dom-module id="epiviz-measurement-browser">
   <template>
     <style>
@@ -45,6 +71,16 @@
         /* --paper-button-disabled: {
                     color: white
                 }; */
+      }
+
+      paper-dropdown {
+        margin: 0px 15px 0px 15px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
       }
 
       #modal {
@@ -99,9 +135,18 @@
     <iron-ajax
       id="getCollections"
       method="GET"
-      url="[[msApi]]"
+      url="[[msApi]]ms/"
       handle-as="json"
       on-response="handleGetCollections"
+      debounce-duration="300"
+    >
+    </iron-ajax>
+
+    <iron-ajax
+      id="getCollectionById"
+      method="GET"
+      handle-as="json"
+      on-response="handleGetCollectionById"
       debounce-duration="300"
     >
     </iron-ajax>
@@ -134,7 +179,6 @@
 
     <paper-dialog id="modal" modal>
       <div class="header">
-        <div class="title">Choose Chart</div>
         <!-- <paper-dropdown-menu label="Chart">
                     <paper-listbox slot="dropdown-content" selected="{{selectedChart}}">
                         <template is="dom-repeat" items="{{_charts}}">
@@ -142,41 +186,53 @@
                         </template>
                     </paper-listbox>
                 </paper-dropdown-menu> -->
-        <paper-dropdown
-          label="Chart"
-          value="{{selectedChart}}"
-          no-animations
-          no-label-float
-        >
-          <template is="dom-repeat" items="{{_charts}}">
-            <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
-              >[[item]]</paper-item
-            >
-          </template>
-        </paper-dropdown>
-        <!-- <br/> -->
-        <div class="title">and select datasets below</div>
-        <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
-          <paper-tab>All datasets </paper-tab>
-          <!-- <paper-tab>Use from existing charts</paper-tab> -->
-        </paper-tabs>
+          <div>
+            <div class="title">Choose a chart</div>
+            <paper-dropdown
+            label="Chart"
+            value="{{selectedChart}}"
+            no-animations
+            no-label-float
+          >
+            <template is="dom-repeat" items="{{_charts}}">
+              <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
+                >[[item]]</paper-item
+              >
+            </template>
+          </paper-dropdown>
+          <!-- <br/> -->
+          <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
+            <paper-tab>All datasets </paper-tab>
+            <!-- <paper-tab>Use from existing charts</paper-tab> -->
+          </paper-tabs>
+        </div>
+        <!-- <div>
+          <div class="title">AND</div>
+        </div> -->
+        <div>
+          <div class="title">Choose a collection</div>
+          <paper-dropdown
+            id="collectionElement"
+            label="collection"
+            value="{{selectedCollection}}"
+            no-animations
+            no-label-float
+          >
+            <template is="dom-repeat" items="{{collections}}">
+              <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
+                >[[item]]</paper-item
+              >
+            </template>
+          </paper-dropdown>
+          <div class="title">      and select datasets below</div>
+        </div>
+        <div>
+          <!-- <div class="title">and select datasets below</div> -->
+        </div>
       </div>
       <paper-dialog-scrollable>
         <iron-pages selected="{{tabSelected}}">
           <div class="dialog-content">
-            <div class="title">Choose a collection</div>
-            <paper-dropdown
-              label="collection"
-              value="{{selectedCollection}}"
-              no-animations
-              no-label-float
-            >
-              <template is="dom-repeat" items="{{collections}}">
-                <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
-                  >[[item]]</paper-item
-                >
-              </template>
-            </paper-dropdown>
             <template
               is="dom-if"
               if="[[_tableDataExistsCollection(_jsonMeasurements)]]"
@@ -207,8 +263,7 @@
                     </div> -->
         </iron-pages>
         <!-- <div id="chartPreview">
-
-                </div> -->
+        </div> -->
       </paper-dialog-scrollable>
       <div class="buttons">
         <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
@@ -281,6 +336,12 @@
                 selectedExistingMeasurements: {
                     type: Array,
                     notify: true,
+                },
+
+                selectedCollection: {
+                  type: String,
+                  notify: true,
+                  value: ""
                 },
 
                 /**
@@ -385,10 +446,20 @@
 
         connectedCallback() {
             super.connectedCallback();
+
+            document.dispatchEvent(new CustomEvent('mBrowserReady',
+                    {
+                        bubbles: true
+                    }
+                ));
         }
 
         disconnectedCallback() {
             super.disconnectedCallback();
+        }
+
+        ready() {
+          super.ready();
         }
 
         _getJSONMeasurements(data) {
@@ -450,7 +521,7 @@
             });
 
             this.set("collections", collections);
-            this.set("selectedCollection", null);
+            // this.set("selectedCollection", null);
             this.set("selectedMeasurements", []);
             // this.set("filters", [])
             for (var k in this.filters) {
@@ -733,6 +804,7 @@
             var envElement = this._parentContainer;
 
             this.$.getCollections.generateRequest();
+            // this.$.modal.open();
         }
 
         _close() {
@@ -791,6 +863,40 @@
          */
         closeAddDialog() {
             this.$.modal.close();
+        }
+
+        handleGetCollectionById(e) {
+          var self = this,
+            data = e.detail.response;
+
+            self.set("selectedCollection", data.name);
+
+            self._showModal();
+        }
+
+        loadCollection(collection) {
+            var self = this;
+            // this.$.modal.open();
+
+            // this.$.collectionElement.value = collection;
+            // this._chartSelectionChanged();
+
+            var ajaxElem = this.$.getCollectionById;
+            ajaxElem.url = this.msApi + "collections/" + collection;
+            ajaxElem.generateRequest();
+        }
+
+        getUrlParameter(sParam) {
+          var currPage = decodeURIComponent(window.location.search.substring(1));
+          var pageVars = currPage.split('&');
+
+          for (var i = 0; i < pageVars.length; i++) {
+              var pageParamName = pageVars[i].split('=');
+
+              if (pageParamName[0] === sParam) {
+                  return pageParamName[1] === undefined ? true : pageParamName[1];
+              }
+          }
         }
     };
 
