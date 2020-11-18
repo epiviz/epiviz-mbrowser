@@ -218,9 +218,9 @@
             no-animations
             no-label-float
           >
-            <template is="dom-repeat" items="{{collections}}">
+            <template is="dom-repeat" items="{{_getCollectionKeys(collectionsObj)}}">
               <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
-                >[[item]]</paper-item
+                >[[_getCollectionValue(item)]]</paper-item
               >
             </template>
           </paper-dropdown>
@@ -419,6 +419,11 @@
                     notify: true
                 },
 
+                collectionsObj: {
+                    type: Object,
+                    notify: true
+                },
+
                 selectedCollection: {
                     type: String,
                     notify: true,
@@ -466,6 +471,14 @@
             return data.raw();
         }
 
+        _getCollectionKeys(collectionsObj) {
+          return Object.keys(collectionsObj);
+        }
+
+        _getCollectionValue(item) {
+          return this.collectionsObj[item] ? this.collectionsObj[item] : item;
+        }
+
         handleGetCollections(e) {
             var self = this;
             var data = e.detail.response;
@@ -495,7 +508,8 @@
                     "metadata": m.metadata
                 }
 
-                tmea.annotation.collection = m.collection_name;
+                tmea.annotation.collection = m.collection_id;
+                tmea.annotation.collection_name = m.collection_name;
                 tmea.annotation._filetype = m.file_type;
                 tmea.annotation.genome = m.genome;
 
@@ -510,6 +524,7 @@
             self.currChartCollections = tcurrChart.currChartCollections;
 
             var collections = [];
+            var collectionsObj = {};
             // var mData = envElement.measurementAll.raw();
             var mData = self.measurementsRaw;
 
@@ -518,9 +533,11 @@
                 if (!collections.includes(m.annotation["collection"])) {
                     collections.push(m.annotation["collection"]);
                 }
+                collectionsObj[m.annotation["collection"]] = m.annotation["collection_name"];
             });
 
             this.set("collections", collections);
+            this.set("collectionsObj", collectionsObj)
             // this.set("selectedCollection", null);
             this.set("selectedMeasurements", []);
             // this.set("filters", [])
