@@ -198,6 +198,15 @@
                     </paper-listbox>
                 </paper-dropdown-menu> -->
           <div>
+            <div class="title">Choose a project</div>
+            <paper-dropdown id="collectionProject" label="project" value="{{projectId}}" no-animations no-label-float>
+              <template is="dom-repeat" items="{{_getProjectKeys(projects)}}">
+                <paper-item on-click="_projectChanged" value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
+              </template>
+            </paper-dropdown>
+            <div class="title"> and select datasets below</div>
+          </div>
+          <div>
             <div class="title">Choose a chart</div>
             <paper-dropdown
             label="Chart"
@@ -225,12 +234,12 @@
           <paper-dropdown
             id="collectionElement"
             label="collection"
-            value="{{selectedCollection}}"
+            value="{{collection2Id}}"
             no-animations
             no-label-float
           >
             <template is="dom-repeat" items="{{_getCollectionKeys(collectionsObj)}}">
-              <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
+              <paper-item on-click="_collectionsSelectionChanged" value$="[[item]]"
                 >[[_getCollectionValue(item)]]</paper-item
               >
             </template>
@@ -439,8 +448,8 @@
                 },
 
                 collection2Id: {
-                  type: String
-                  // observer: "_refetchCollections"
+                  type: String,
+                  observer: "_collectionIdChanged"
                 },
 
 
@@ -451,7 +460,8 @@
 
                 collectionsObj: {
                     type: Object,
-                    notify: true
+                    notify: true,
+                    // observer: "_collectionIdChanged"
                 },
 
                 selectedCollection: {
@@ -497,7 +507,20 @@
           super.ready();
         }
 
-        _refetchCollections() {}
+        _refetchMeasurements(){
+          this.$.getMeasurements.generateRequest();
+        }
+
+        _collectionIdChanged(newVal, oldVal) {
+          console.log('collection id ', newVal, oldVal);
+          this._refetchMeasurements()
+        }
+        _refetchCollections(newVal, oldVal) {
+          if(newVal) {
+            this.$.getCollections2.generateRequest();
+          }
+
+        }
 
         handleGetProjects(e) {
             var self = this;
@@ -508,8 +531,6 @@
             data.forEach((it) => projects[it.project_id] = it);
 
             this.projects = projects;
-            //todo: for test
-            this.projectId = data[0].project_id;
 
             this.$.modal.open();
             this.$.modal.refit();
@@ -518,8 +539,6 @@
                 this.shadowRoot.querySelector("#cardElem")._selected = {};
                 this.shadowRoot.querySelector("#cardElem").filters = self.filters;
             }
-
-            this.$.getCollections2.generateRequest();
         }
 
         handleGetCollections2(e) {
@@ -527,11 +546,13 @@
             var data = e.detail.response;
             console.log('collecions2', data);
 
-            this.collections2 = data;
-            //todo: for test
-            this.collection2Id = this.collections2[0].collection_id;
+            var collections = [];
+            var collectionsObj = {};
+            data.forEach(function(it) {
+                collectionsObj[it.collection_id] = it.collection_id;//todo change to name
+            });
 
-            this.$.getMeasurements.generateRequest();
+            this.set("collectionsObj", collectionsObj)
         }
 
         handleGetMeasurements(e) {
@@ -539,8 +560,11 @@
             var data = e.detail.response;
             console.log('measurements', data);
             this.measurementsHandling(data);
-        }
+            
 
+            // console.log('view measurements');
+            // this._updateMeasurmentView();
+        }
 
         measurementsHandling(data) {
           var self = this;
@@ -624,6 +648,22 @@
 
         _getJSONMeasurements(data) {
             return data.raw();
+        }
+
+        /**
+        * upload collection of chosen project
+        */
+        _projectChanged(event) {
+          this.projectId = event.target.attributes.value.value;
+          this.$.getCollections2.generateRequest();
+        }
+                
+        _getProjectKeys(projects) {
+          return Object.keys(projects);
+        }
+
+        _getProjectValue(item) {
+          return this.projects[item].project_id ? this.projects[item].project_id : item;
         }
 
         _getCollectionKeys(collectionsObj) {
@@ -715,10 +755,152 @@
             }
         }
 
+        _updateMeasurmentView() {
+
+          var self = this;
+            var envElement = self._parentContainer;
+
+            self.selection = {};
+            self.selection.chartType = self.selectedChart;
+            self.measurements = self.measurementsRaw; //envElement.measurementSet;
+
+            // if (event && event.target.nodeName === "PAPER-ITEM") {
+            //     $(event.target).parent().parent()[0].selected = null;
+            // }
+
+            if (self.selection.chartType == "GenesTrack") {
+                // var data = envElement.measurementAll.subset(function (m) { return m.defaultChartType() == "Genes Track" });
+                var data = self.measurements.filter(m => m.defaultChartType == "Genes Track");
+                var datasourceGroups = {};
+                data.forEach(function (m) {
+                    datasourceGroups[m.datasourceGroup] = ["Genes track", false];
+                });
+
+                // data = data.raw();
+            }
+            else if (self.selection.chartType.indexOf("Blocks") != -1) {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+                var source = "epiviz";
+                data = data.filter(function(m) {
+                    return m.type == "range";
+                });
+
+                // data = data.raw();
+
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            else if (self.selection.chartType.indexOf("Plot") != -1) {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+                var source = "epiviz";
+                data = data.filter(function(m) {
+                    return m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]);
+                });
+
+                // data = data.raw();
+
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            else if (self.selection.chartType.indexOf("Gwas") != -1) {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+                var source = "epiviz";
+                data = data.filter(function(m) {
+                    return ["gwas"].includes(m.annotation["_filetype"]);
+                });
+
+                // data = data.raw();
+
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            else if (self.selection.chartType.indexOf("Transcript") != -1) {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+                var source = "epiviz";
+                data = data.filter(function(m) {
+                    return ["transcript"].includes(m.annotation["_filetype"]);
+                });
+
+                // data = data.raw();
+
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            else if (self.selection.chartType.indexOf("Interaction") != -1) {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+                var source = "epiviz";
+                data = data.filter(function(m) {
+                    return ["interaction_bigbed"].includes(m.annotation["_filetype"]);
+                });
+
+                // data = data.raw();
+
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            else {
+                // var data = envElement.measurementAll;
+                var data = self.measurements;
+
+                data = data.filter(function(m) {
+                    return m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]);
+                });
+                // data = data.raw();
+                data = data.concat(self.currChartCollections);
+                var source = "epiviz";
+                if (this.selectedCollection && this.selectedCollection != "") {
+                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
+                }
+            }
+            var nData = [];
+            var mData = JSON.parse(JSON.stringify(data)); //.raw();
+            mData.forEach(function (d, i) {
+
+                if (d.annotation["genome"] == self.genome) {
+                    var temp = d.annotation;
+                    if (temp == undefined) {
+                        temp = {};
+                    }
+
+                    delete temp["tags"];
+                    // delete d["type"];
+                    delete d["datasourceId"];
+                    delete d["datasourceGroup"];
+                    delete d["dataprovider"];
+                    delete d["formula"];
+                    delete d["defaultChartType"];
+                    delete d["metadata"];
+                    delete d["minValue"];
+                    delete d["maxValue"];
+
+                    d.annotation = temp;
+                    nData.push(d);
+                }
+            });
+
+            self.set("_jsonMeasurements", nData);
+            self.$.modal.refit();
+        }
+
+        _collectionsSelectionChanged(event) {
+          this.collection2Id = event.target.attributes.value.value;
+        }
+
         /**
          * show the measurement browser
          */
         _chartSelectionChanged(event) {
+
             var self = this;
             var envElement = self._parentContainer;
 
