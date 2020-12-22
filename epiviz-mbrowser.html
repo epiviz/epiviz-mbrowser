@@ -132,15 +132,6 @@
       }
     </style>
     <!-- local DOM goes here -->
-    <iron-ajax
-      id="getCollections"
-      method="GET"
-      url="https://dev.gepiviz.science.roche.com/emd/api/v1/ms/"
-      handle-as="json"
-      on-response="handleGetCollections"
-      debounce-duration="300"
-    >
-    </iron-ajax>
     <iron-ajax id="getProjects" method="GET" url="https://dev.gepiviz.science.roche.com/emd/api/v1/projects/"
       handle-as="json" on-response="handleGetProjects" debounce-duration="300"></iron-ajax>
     <iron-ajax id="getCollections2" method="GET"
@@ -150,17 +141,6 @@
     <iron-ajax id="getMeasurements" method="GET"
       url="https://dev.gepiviz.science.roche.com/emd/api/v1/collections/[[collection2Id]]/ms" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
-      
-      
-
-    <iron-ajax
-      id="getCollectionById"
-      method="GET"
-      handle-as="json"
-      on-response="handleGetCollectionById"
-      debounce-duration="300"
-    >
-    </iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
@@ -245,9 +225,6 @@
             </template>
           </paper-dropdown>
           <div class="title">      and select datasets below</div>
-        </div>
-        <div>
-          <!-- <div class="title">and select datasets below</div> -->
         </div>
       </div>
       <paper-dialog-scrollable>
@@ -350,7 +327,7 @@
 
                 selectedMeasurements: {
                     type: Array,
-                    notify: true,
+                    notify: true
                 },
 
                 selectedExistingMeasurements: {
@@ -449,15 +426,15 @@
 
                 collection2Id: {
                   type: String,
+                  notify: true,
                   observer: "_collectionIdChanged"
                 },
-
 
                 collections: {
                     type: Array,
                     notify: true
                 },
-
+             
                 collectionsObj: {
                     type: Object,
                     notify: true,
@@ -512,20 +489,19 @@
         }
 
         _collectionIdChanged(newVal, oldVal) {
-          console.log('collection id ', newVal, oldVal);
+          console.log('collection id (new/old) ', newVal, oldVal);
           this._refetchMeasurements()
         }
         _refetchCollections(newVal, oldVal) {
+          console.log('projectId changed (new/old)', newVal, oldVal);
           if(newVal) {
             this.$.getCollections2.generateRequest();
           }
-
         }
 
         handleGetProjects(e) {
             var self = this;
             var data = e.detail.response;
-            console.log('projects', data);
 
             const projects = {};
             data.forEach((it) => projects[it.project_id] = it);
@@ -549,21 +525,20 @@
             var collections = [];
             var collectionsObj = {};
             data.forEach(function(it) {
-                collectionsObj[it.collection_id] = it.collection_id;//todo change to name
+                collectionsObj[it.collection_id] = it.collection_id;
             });
 
             this.set("collectionsObj", collectionsObj)
+            this.set("collection2Id", null);
         }
 
         handleGetMeasurements(e) {
-            var self = this;
             var data = e.detail.response;
-            console.log('measurements', data);
+            this.set('selectedCollection', this.collection2Id);
             this.measurementsHandling(data);
-            
-
-            // console.log('view measurements');
-            // this._updateMeasurmentView();
+            console.log('raw ', this.measurementsRaw);
+            console.log('view measurements');
+            this._updateMeasurmentView();
         }
 
         measurementsHandling(data) {
@@ -609,24 +584,7 @@
           this.set("_existingChartMeasurements", tcurrChart.currentCharts);
           self.currChartCollections = tcurrChart.currChartCollections;
 
-          var collections = [];
-          var collectionsObj = {};
-          // var mData = envElement.measurementAll.raw();
-          var mData = self.measurementsRaw;
-
-          mData = mData.concat(self.currChartCollections);
-          mData.forEach(function (m) {
-            if (!collections.includes(m.annotation["collection"])) {
-              collections.push(m.annotation["collection"]);
-            }
-            collectionsObj[m.annotation["collection"]] = m.annotation["collection_name"];
-          });
-
-          this.set("collections", collections);
-          this.set("collectionsObj", collectionsObj)
-          // this.set("selectedCollection", null);
-          this.set("selectedMeasurements", []);
-          // this.set("filters", [])
+          this.set("filters", [])
           for (var k in this.filters) {
             self.filters[k] = [];
           }
@@ -634,8 +592,6 @@
           this.set("selectedChart", "MultiStackedLineTrack");
           this.selectedChart = "MultiStackedLineTrack";
           this._chartSelectionChanged();
-
-          // this.$.modal.positionTarget = document;
 
           this.$.modal.open();
           this.$.modal.refit();
@@ -650,14 +606,6 @@
             return data.raw();
         }
 
-        /**
-        * upload collection of chosen project
-        */
-        _projectChanged(event) {
-          this.projectId = event.target.attributes.value.value;
-          this.$.getCollections2.generateRequest();
-        }
-                
         _getProjectKeys(projects) {
           return Object.keys(projects);
         }
@@ -674,123 +622,28 @@
           return this.collectionsObj[item] ? this.collectionsObj[item] : item;
         }
 
-        handleGetCollections(e) {
-            var self = this;
-            var data = e.detail.response;
-            console.log('collections with measurements', data);
-            
-            var envElement = self._parentContainer;
-
-            var pdata = [];
-
-            data.forEach(function(m) {
-                
-                var ptype = "range";
-                if (["bp"].includes(m.datatype)) {
-                    ptype = "feature";
-                }
-
-                var tmea = {
-                    "id": m.measurement_id,
-                    "name": m.name,
-                    "type": ptype,
-                    "datasourceId": m.url,
-                    "datasourceGroup": m.url,
-                    "dataprovider": "fileapi",
-                    "formula": null,
-                    "defaultChartType": "track",
-                    "annotation": m.annotation,
-                    "metadata": m.metadata
-                }
-
-                tmea.annotation.collection = m.collection_id;
-                tmea.annotation.collection_name = m.collection_name;
-                tmea.annotation._filetype = m.file_type;
-                tmea.annotation.genome = m.genome;
-
-                pdata.push(tmea);
-            });
-
-            self.measurementsRaw = pdata;
-
-            var tcurrChart = self._getExistingChartMeasurements(envElement);
-            this.currentChartObj = tcurrChart.currentChartObj;
-            this.set("_existingChartMeasurements", tcurrChart.currentCharts);
-            self.currChartCollections = tcurrChart.currChartCollections;
-
-            var collections = [];
-            var collectionsObj = {};
-            // var mData = envElement.measurementAll.raw();
-            var mData = self.measurementsRaw;
-
-            mData = mData.concat(self.currChartCollections);
-            mData.forEach(function(m) {
-                if (!collections.includes(m.annotation["collection"])) {
-                    collections.push(m.annotation["collection"]);
-                }
-                collectionsObj[m.annotation["collection"]] = m.annotation["collection_name"];
-            });
-
-            this.set("collections", collections);
-            this.set("collectionsObj", collectionsObj)
-            // this.set("selectedCollection", null);
-            this.set("selectedMeasurements", []);
-            // this.set("filters", [])
-            for (var k in this.filters) {
-                self.filters[k] = [];
-            }
-            this.set("filters", self.filters)
-            this.set("selectedChart", "MultiStackedLineTrack");
-            this.selectedChart = "MultiStackedLineTrack";
-            this._chartSelectionChanged();
-
-            // this.$.modal.positionTarget = document;
-
-            this.$.modal.open();
-            this.$.modal.refit();
-
-            if(this.shadowRoot.querySelector("#cardElem")) {
-                this.shadowRoot.querySelector("#cardElem")._selected = {};
-                this.shadowRoot.querySelector("#cardElem").filters = self.filters;
-            }
-        }
-
         _updateMeasurmentView() {
-
           var self = this;
             var envElement = self._parentContainer;
-
             self.selection = {};
             self.selection.chartType = self.selectedChart;
             self.measurements = self.measurementsRaw; //envElement.measurementSet;
-
-            // if (event && event.target.nodeName === "PAPER-ITEM") {
-            //     $(event.target).parent().parent()[0].selected = null;
-            // }
+            console.log('selected measur !!(updatemesurVeiw)', this.selectedMeasurements);
 
             if (self.selection.chartType == "GenesTrack") {
-                // var data = envElement.measurementAll.subset(function (m) { return m.defaultChartType() == "Genes Track" });
                 var data = self.measurements.filter(m => m.defaultChartType == "Genes Track");
                 var datasourceGroups = {};
                 data.forEach(function (m) {
                     datasourceGroups[m.datasourceGroup] = ["Genes track", false];
                 });
 
-                // data = data.raw();
             }
             else if (self.selection.chartType.indexOf("Blocks") != -1) {
-                // var data = envElement.measurementAll;
                 var data = self.measurements;
                 var source = "epiviz";
                 data = data.filter(function(m) {
                     return m.type == "range";
                 });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
             }
             else if (self.selection.chartType.indexOf("Plot") != -1) {
                 // var data = envElement.measurementAll;
@@ -799,12 +652,6 @@
                 data = data.filter(function(m) {
                     return m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]);
                 });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
             }
             else if (self.selection.chartType.indexOf("Gwas") != -1) {
                 // var data = envElement.measurementAll;
@@ -813,12 +660,6 @@
                 data = data.filter(function(m) {
                     return ["gwas"].includes(m.annotation["_filetype"]);
                 });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
             }
             else if (self.selection.chartType.indexOf("Transcript") != -1) {
                 // var data = envElement.measurementAll;
@@ -827,12 +668,6 @@
                 data = data.filter(function(m) {
                     return ["transcript"].includes(m.annotation["_filetype"]);
                 });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
             }
             else if (self.selection.chartType.indexOf("Interaction") != -1) {
                 // var data = envElement.measurementAll;
@@ -841,8 +676,6 @@
                 data = data.filter(function(m) {
                     return ["interaction_bigbed"].includes(m.annotation["_filetype"]);
                 });
-
-                // data = data.raw();
 
                 if (this.selectedCollection && this.selectedCollection != "") {
                     data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
@@ -855,12 +688,8 @@
                 data = data.filter(function(m) {
                     return m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]);
                 });
-                // data = data.raw();
-                data = data.concat(self.currChartCollections);
-                var source = "epiviz";
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
+
+                console.log('shit hapens here', data)
             }
             var nData = [];
             var mData = JSON.parse(JSON.stringify(data)); //.raw();
@@ -887,13 +716,8 @@
                     nData.push(d);
                 }
             });
-
             self.set("_jsonMeasurements", nData);
             self.$.modal.refit();
-        }
-
-        _collectionsSelectionChanged(event) {
-          this.collection2Id = event.target.attributes.value.value;
         }
 
         /**
@@ -1055,6 +879,7 @@
         }
 
         _tableDataExistsCollection(tableData) {
+          console.log('_tableDataExistsCollection', this.selectedCollection, tableData)
             return this.selectedCollection && this.selectedCollection != "" ? this._tableDataExists(tableData) : false;
         }
 
@@ -1216,15 +1041,6 @@
          */
         closeAddDialog() {
             this.$.modal.close();
-        }
-
-        handleGetCollectionById(e) {
-          var self = this,
-            data = e.detail.response;
-
-            self.set("selectedCollection", data.name);
-
-            self._showModal();
         }
 
         loadCollection(collection) {
