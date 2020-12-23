@@ -490,7 +490,9 @@
 
         _collectionIdChanged(newVal, oldVal) {
           console.log('collection id (new/old) ', newVal, oldVal);
-          this._refetchMeasurements()
+          if(newVal) {
+            this._refetchMeasurements();
+          }
         }
         _refetchCollections(newVal, oldVal) {
           console.log('projectId changed (new/old)', newVal, oldVal);
@@ -510,11 +512,6 @@
 
             this.$.modal.open();
             this.$.modal.refit();
-
-            if(this.shadowRoot.querySelector("#cardElem")) {
-                this.shadowRoot.querySelector("#cardElem")._selected = {};
-                this.shadowRoot.querySelector("#cardElem").filters = self.filters;
-            }
         }
 
         handleGetCollections2(e) {
@@ -596,10 +593,6 @@
           this.$.modal.open();
           this.$.modal.refit();
 
-          if (this.shadowRoot.querySelector("#cardElem")) {
-            this.shadowRoot.querySelector("#cardElem")._selected = {};
-            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
-          }
         }
 
         _getJSONMeasurements(data) {
