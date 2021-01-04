@@ -3,10 +3,7 @@
 
 <!-- External Polymer Styles/elements dependency -->
 <link rel="import" href="../paper-dialog/paper-dialog.html" />
-<link
-  rel="import"
-  href="../paper-dialog-scrollable/paper-dialog-scrollable.html"
-/>
+<link rel="import" href="../paper-dialog-scrollable/paper-dialog-scrollable.html" />
 <!-- <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html"> -->
 <link rel="import" href="../paper-menu-button/paper-menu-button.html" />
 <link rel="import" href="../paper-icon-button/paper-icon-button.html" />
@@ -20,33 +17,6 @@
 <link rel="import" href="../iron-pages/iron-pages.html" />
 <link rel="import" href="../paper-dropdown/paper-dropdown.html" />
 
-<script>
-  // window.addEventListener('WebComponentsReady', function() {
-      document.addEventListener('mBrowserReady', function() {
-          var collection = getUrlParameter("collection");
-          if(collection) {
-            // document.querySelector("epiviz-measurement-browser").loadCollection(collection);
-              document.querySelector("epiviz-app").shadowRoot.querySelector("epiviz-navigation")
-                .shadowRoot.querySelector("epiviz-measurement-browser").loadCollection(collection);
-          }
-      });
-  // });
-
-  function getUrlParameter(sParam) {
-      var currPage = decodeURIComponent(window.location.search.substring(1));
-      var pageVars = currPage.split('&');
-
-      for (var i = 0; i < pageVars.length; i++) {
-          var pageParamName = pageVars[i].split('=');
-
-          if (pageParamName[0] === sParam) {
-              return pageParamName[1] === undefined ? true : pageParamName[1];
-          }
-      }
-  };
-</script>
-
-
 <!--
 `<epiviz-measurement-browser>`
     Creates an Instance of the measurement browser.
@@ -54,13 +24,6 @@
 <dom-module id="epiviz-measurement-browser">
   <template>
     <style>
-      /* 
-            :host {
-                --paper-button: {
-                    display: inline-block;
-                }      
-            } */
-
       paper-button {
         --paper-button: {
           display: inline;
@@ -68,9 +31,6 @@
           color: #fff;
           padding: 5px;
         }
-        /* --paper-button-disabled: {
-                    color: white
-                }; */
       }
 
       paper-dropdown {
@@ -87,7 +47,6 @@
         position: fixed;
         top: 0;
         left: 0;
-        /* height: 90%; */
         width: 90%;
       }
 
@@ -100,7 +59,6 @@
       }
 
       data-filter {
-        /* max-height: calc(72vh - 100px); */
         height: auto;
       }
 
@@ -132,24 +90,15 @@
       }
     </style>
     <!-- local DOM goes here -->
-    <iron-ajax
-      id="getCollections"
-      method="GET"
-      url="[[msApi]]ms/"
-      handle-as="json"
-      on-response="handleGetCollections"
-      debounce-duration="300"
-    >
+    <iron-ajax id="getProjects" method="GET" url="https://dev.gepiviz.science.roche.com/emd/api/v1/projects/"
+      handle-as="json" on-response="handleGetProjects" debounce-duration="300"></iron-ajax>
+    <iron-ajax id="getCollections" method="GET"
+      url="https://dev.gepiviz.science.roche.com/emd/api/v1/projects/[[projectId]]/collections" handle-as="json"
+      on-response="handleGetCollections" debounce-duration="300"></iron-ajax>
     </iron-ajax>
-
-    <iron-ajax
-      id="getCollectionById"
-      method="GET"
-      handle-as="json"
-      on-response="handleGetCollectionById"
-      debounce-duration="300"
-    >
-    </iron-ajax>
+    <iron-ajax id="getMeasurements" method="GET"
+      url="https://dev.gepiviz.science.roche.com/emd/api/v1/collections/[[collectionId]]/ms" handle-as="json"
+      on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
@@ -161,11 +110,7 @@
     </template>
 
     <template is="dom-if" if="{{_isEnvironment(_charts)}}">
-      <paper-menu-button
-        dynamic-align
-        horizontal-align="right"
-        vertical-offset="42"
-      >
+      <paper-menu-button dynamic-align horizontal-align="right" vertical-offset="42">
         <paper-button slot="dropdown-trigger" raised>
           <iron-icon icon="editor:insert-chart"></iron-icon>
           <span>Add Chart</span>
@@ -179,104 +124,60 @@
 
     <paper-dialog id="modal" modal>
       <div class="header">
-        <!-- <paper-dropdown-menu label="Chart">
-                    <paper-listbox slot="dropdown-content" selected="{{selectedChart}}">
-                        <template is="dom-repeat" items="{{_charts}}">
-                            <paper-item on-click="_chartSelectionChanged" value$="[[item]]">[[item]]</paper-item>
-                        </template>
-                    </paper-listbox>
-                </paper-dropdown-menu> -->
-          <div>
-            <div class="title">Choose a chart</div>
-            <paper-dropdown
-            label="Chart"
-            value="{{selectedChart}}"
-            no-animations
-            no-label-float
-          >
-            <template is="dom-repeat" items="{{_charts}}">
-              <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
-                >[[item]]</paper-item
-              >
+        <div>
+          <div class="title">Choose a project</div>
+          <paper-dropdown id="collectionProject" label="project" value="{{projectId}}" no-animations no-label-float>
+            <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
+              <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
             </template>
           </paper-dropdown>
-          <!-- <br/> -->
+          <div class="title"> and select datasets below</div>
+        </div>
+        <div>
+          <div class="title">Choose a chart</div>
+          <paper-dropdown label="Chart" value="{{selectedChart}}" no-animations no-label-float>
+            <template is="dom-repeat" items="{{_charts}}">
+              <paper-item on-click="_updateMeasurmentView" value$="[[item]]">[[item]]</paper-item>
+            </template>
+          </paper-dropdown>
           <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
             <paper-tab>All datasets </paper-tab>
-            <!-- <paper-tab>Use from existing charts</paper-tab> -->
           </paper-tabs>
         </div>
-        <!-- <div>
-          <div class="title">AND</div>
-        </div> -->
         <div>
           <div class="title">Choose a collection</div>
-          <paper-dropdown
-            id="collectionElement"
-            label="collection"
-            value="{{selectedCollection}}"
-            no-animations
-            no-label-float
-          >
-            <template is="dom-repeat" items="{{_getCollectionKeys(collectionsObj)}}">
-              <paper-item on-click="_chartSelectionChanged" value$="[[item]]"
-                >[[_getCollectionValue(item)]]</paper-item
-              >
+          <paper-dropdown id="collectionElement" label="collection" value="{{collectionId}}" no-animations
+            no-label-float>
+            <template is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
+              <paper-item value$="[[item]]">[[_getCollectionValue(item)]]
+              </paper-item>
             </template>
           </paper-dropdown>
-          <div class="title">      and select datasets below</div>
-        </div>
-        <div>
-          <!-- <div class="title">and select datasets below</div> -->
+          <div class="title"> and select datasets below</div>
         </div>
       </div>
       <paper-dialog-scrollable>
         <iron-pages selected="{{tabSelected}}">
           <div class="dialog-content">
-            <template
-              is="dom-if"
-              if="[[_tableDataExistsCollection(_jsonMeasurements)]]"
-            >
-              <data-filter
-                filters="{{filters}}"
-                id="cardElem"
-                data="{{_jsonMeasurements}}"
-                class="new-charts"
-                selected-items="{{selectedMeasurements}}"
-              >
+            <template is="dom-if" if="[[_tableDataExists(_jsonMeasurements)]]">
+              <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
+                selected-items="[[selectedMeasurements]]">
               </data-filter>
             </template>
-            <p
-              class="infoMessage"
-              hidden$="[[_tableDataExistsCollection(_jsonMeasurements)]]"
-            >
+            <p class="infoMessage" hidden$="[[_tableDataExists(_jsonMeasurements)]]">
               No measurement are available for the chart type and/or collection.
               Choose a different chart or collection
             </p>
           </div>
-          <!-- <div class="dialog-content">
-                        <template is="dom-if" if="[[_tableDataExists(_existingChartMeasurements)]]">
-                            <data-filter data="{{_existingChartMeasurements}}" class="curr-charts" selected-items="{{selectedExistingMeasurements}}">
-                            </data-filter>
-                        </template>
-                        <p class="infoMessage" hidden$="[[_tableDataExists(_existingChartMeasurements)]]">No Existing Charts</p>
-                    </div> -->
         </iron-pages>
-        <!-- <div id="chartPreview">
-        </div> -->
       </paper-dialog-scrollable>
       <div class="buttons">
         <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
-        <paper-button
-          on-tap="_submit"
+        <paper-button on-tap="_submit"
           disabled="{{!_enableButton(selectedChart, selectedMeasurements.*, selectedExistingMeasurements.*, tabSelected.*)}}"
-          dialog-confirm
-          autofocus
-          >Add Chart</paper-button
-        >
+          dialog-confirm autofocus>Add Chart</paper-button>
       </div>
     </paper-dialog>
-    <!-- </div> -->
   </template>
 
   <script>
@@ -284,637 +185,539 @@
     // Extend Polymer.Element base class
     class EpivizMeasurementBrowser extends Polymer.Element {
 
-        static get is() { return 'epiviz-measurement-browser'; }
-
-        static get properties() {
-            return {
-
-                msApi: {
-                  type: String
-                },
-
-                measurementsRaw: {
-                  type: Array,
-                  notify: true,
-                  value: []
-                },
-
-                genome: {
-                    type: String,
-                    notify: true,
-                    value: "hg38"
-                },
-
-                /**
-                * currently available measurements on the app
-                * uses measurements available from the `epiviz-data-source` element.
-                *
-                * @type {Array.<epiviz.ui.charts.CustomSetting>}
-                */
-                measurements: {
-                    type: Object,
-                    notify: true
-                },
-
-                /**
-                * selected measurements from browser.
-                * chartType:
-                * measurement:
-                * @type {Object}
-                */
-                selection: {
-                    type: Object,
-                    notify: true,
-                    value: {}
-                },
-
-                selectedMeasurements: {
-                    type: Array,
-                    notify: true,
-                },
-
-                selectedExistingMeasurements: {
-                    type: Array,
-                    notify: true,
-                },
-
-                selectedCollection: {
-                  type: String,
-                  notify: true,
-                  value: ""
-                },
-
-                /**
-                * selected chart from the browser.
-                *
-                * @type {Array.<epiviz.ui.charts.CustomSetting>}
-                */
-                selectedChart: {
-                    type: String,
-                    notify: true,
-                    value: "MultiStackedLineTrack",
-                    observer: "_refitModal",
-                },
-
-                /**
-                * currently available chart types on the app.
-                */
-                _chartTypes: {
-                    type: Object,
-                    notify: true,
-                    reflectToAttribute: true,
-                    value: function () {
-                        return {
-                            // "GenesTrack": "epiviz-genes-track",
-                            "TranscriptTrack": "epiviz-transcript-track",
-                            "BlocksTrack": 'epiviz-blocks-track',
-                            "InteractionTrack": 'epiviz-interaction-track',
-                            "StackedBlocksTrack": 'epiviz-stacked-blocks-track',
-                            "HeatmapPlot": "epiviz-heatmap-plot",
-                            "ScatterPlot": "epiviz-scatter-plot",
-                            "LineTrack": 'epiviz-line-track',
-                            "GwasTrack": 'epiviz-gwas-track',
-                            "StackedLineTrack": 'epiviz-stacked-line-track',
-                            "MultiStackedLineTrack": 'epiviz-multistacked-line-track',
-                            "MirrorLineTrack": "epiviz-line-track-mirror",
-                            "LinePlot": 'epiviz-line-plot',
-                            "StackedLinePlot": 'epiviz-stacked-line-plot',
-                            "EpivizNavigation": 'epiviz-navigation'
-                        }
-                    }
-                },
-
-                _charts: {
-                    type: Array,
-                    notify: true,
-                    computed: "_getCharts(_chartTypes, _parentContainer)"
-                },
-
-                /**
-                * parentContainer
-                */
-                _parentContainer: {
-                    type: Object,
-                },
-
-                _jsonMeasurements: {
-                    type: Array,
-                },
-
-                _existingChartMeasurements: {
-                    type: Array,
-                },
-
-                tabSelected: {
-                    type: Number,
-                    notify: true,
-                    value: function () {
-                        return 0;
-                    },
-                    observer: "_refitModal",
-                },
-
-                collections: {
-                    type: Array,
-                    notify: true
-                },
-
-                collectionsObj: {
-                    type: Object,
-                    notify: true
-                },
-
-                selectedCollection: {
-                    type: String,
-                    notify: true,
-                    observer: "selectedCollectionChanged",
-                },
-
-                filters: {
-                    type: Array,
-                    notify: true
-                }
-
-            }
-        }
-
-        static get observers() {
-            return [
-                /* observer array just like 1.x */
-                // "_chartPreviewUpdate(selectedMeasurements.*, selectedChart)"
-            ]
-        }
-
-        constructor() {
-            super();
-        }
-
-        connectedCallback() {
-            super.connectedCallback();
-
-            document.dispatchEvent(new CustomEvent('mBrowserReady',
-                    {
-                        bubbles: true
-                    }
-                ));
-        }
-
-        disconnectedCallback() {
-            super.disconnectedCallback();
-        }
-
-        ready() {
-          super.ready();
-        }
-
-        _getJSONMeasurements(data) {
-            return data.raw();
-        }
-
-        _getCollectionKeys(collectionsObj) {
-          return Object.keys(collectionsObj);
-        }
-
-        _getCollectionValue(item) {
-          return this.collectionsObj[item] ? this.collectionsObj[item] : item;
-        }
-
-        handleGetCollections(e) {
-            var self = this;
-            var data = e.detail.response;
-            console.log(data);
-            
-            var envElement = self._parentContainer;
-
-            var pdata = [];
-
-            data.forEach(function(m) {
-                
-                var ptype = "range";
-                if (["bp"].includes(m.datatype)) {
-                    ptype = "feature";
-                }
-
-                var tmea = {
-                    "id": m.measurement_id,
-                    "name": m.name,
-                    "type": ptype,
-                    "datasourceId": m.url,
-                    "datasourceGroup": m.url,
-                    "dataprovider": "fileapi",
-                    "formula": null,
-                    "defaultChartType": "track",
-                    "annotation": m.annotation,
-                    "metadata": m.metadata
-                }
-
-                tmea.annotation.collection = m.collection_id;
-                tmea.annotation.collection_name = m.collection_name;
-                tmea.annotation._filetype = m.file_type;
-                tmea.annotation.genome = m.genome;
-
-                pdata.push(tmea);
-            });
-
-            self.measurementsRaw = pdata;
-
-            var tcurrChart = self._getExistingChartMeasurements(envElement);
-            this.currentChartObj = tcurrChart.currentChartObj;
-            this.set("_existingChartMeasurements", tcurrChart.currentCharts);
-            self.currChartCollections = tcurrChart.currChartCollections;
-
-            var collections = [];
-            var collectionsObj = {};
-            // var mData = envElement.measurementAll.raw();
-            var mData = self.measurementsRaw;
-
-            mData = mData.concat(self.currChartCollections);
-            mData.forEach(function(m) {
-                if (!collections.includes(m.annotation["collection"])) {
-                    collections.push(m.annotation["collection"]);
-                }
-                collectionsObj[m.annotation["collection"]] = m.annotation["collection_name"];
-            });
-
-            this.set("collections", collections);
-            this.set("collectionsObj", collectionsObj)
-            // this.set("selectedCollection", null);
-            this.set("selectedMeasurements", []);
-            // this.set("filters", [])
-            for (var k in this.filters) {
-                self.filters[k] = [];
-            }
-            this.set("filters", self.filters)
-            this.set("selectedChart", "MultiStackedLineTrack");
-            this.selectedChart = "MultiStackedLineTrack";
-            this._chartSelectionChanged();
-
-            // this.$.modal.positionTarget = document;
-
-            this.$.modal.open();
-            this.$.modal.refit();
-
-            if(this.shadowRoot.querySelector("#cardElem")) {
-                this.shadowRoot.querySelector("#cardElem")._selected = {};
-                this.shadowRoot.querySelector("#cardElem").filters = self.filters;
-            }
-        }
-
-        /**
-         * show the measurement browser
-         */
-        _chartSelectionChanged(event) {
-            var self = this;
-            var envElement = self._parentContainer;
-
-            self.selection = {};
-            self.selection.chartType = self.selectedChart;
-            self.measurements = self.measurementsRaw; //envElement.measurementSet;
-
-            if (event && event.target.nodeName === "PAPER-ITEM") {
-                $(event.target).parent().parent()[0].selected = null;
-            }
-
-            if (self.selection.chartType == "GenesTrack") {
-                // var data = envElement.measurementAll.subset(function (m) { return m.defaultChartType() == "Genes Track" });
-                var data = self.measurements.filter(m => m.defaultChartType == "Genes Track");
-                var datasourceGroups = {};
-                data.forEach(function (m) {
-                    datasourceGroups[m.datasourceGroup] = ["Genes track", false];
-                });
-
-                // data = data.raw();
-            }
-            else if (self.selection.chartType.indexOf("Blocks") != -1) {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-                var source = "epiviz";
-                data = data.filter(function(m) {
-                    return m.type == "range";
-                });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            else if (self.selection.chartType.indexOf("Plot") != -1) {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-                var source = "epiviz";
-                data = data.filter(function(m) {
-                    return m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]);
-                });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            else if (self.selection.chartType.indexOf("Gwas") != -1) {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-                var source = "epiviz";
-                data = data.filter(function(m) {
-                    return ["gwas"].includes(m.annotation["_filetype"]);
-                });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            else if (self.selection.chartType.indexOf("Transcript") != -1) {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-                var source = "epiviz";
-                data = data.filter(function(m) {
-                    return ["transcript"].includes(m.annotation["_filetype"]);
-                });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            else if (self.selection.chartType.indexOf("Interaction") != -1) {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-                var source = "epiviz";
-                data = data.filter(function(m) {
-                    return ["interaction_bigbed"].includes(m.annotation["_filetype"]);
-                });
-
-                // data = data.raw();
-
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            else {
-                // var data = envElement.measurementAll;
-                var data = self.measurements;
-
-                data = data.filter(function(m) {
-                    return m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]);
-                });
-                // data = data.raw();
-                data = data.concat(self.currChartCollections);
-                var source = "epiviz";
-                if (this.selectedCollection && this.selectedCollection != "") {
-                    data = data.filter(function (m) { return m["annotation"]["collection"] == self.selectedCollection});
-                }
-            }
-            var nData = [];
-            var mData = JSON.parse(JSON.stringify(data)); //.raw();
-            mData.forEach(function (d, i) {
-
-                if (d.annotation["genome"] == self.genome) {
-                    var temp = d.annotation;
-                    if (temp == undefined) {
-                        temp = {};
-                    }
-
-                    delete temp["tags"];
-                    // delete d["type"];
-                    delete d["datasourceId"];
-                    delete d["datasourceGroup"];
-                    delete d["dataprovider"];
-                    delete d["formula"];
-                    delete d["defaultChartType"];
-                    delete d["metadata"];
-                    delete d["minValue"];
-                    delete d["maxValue"];
-
-                    d.annotation = temp;
-                    nData.push(d);
-                }
-            });
-
-            self.set("_jsonMeasurements", nData);
-            self.$.modal.refit();
-        }
-
-        /**
-         * Get Available Chart Types
-         */
-        _getCharts(chartTypes, parentContainer) {
-            if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
-                delete chartTypes["EpivizNavigation"];
-            }
-            return Object.keys(chartTypes);
-        }
-
-        _isEnvironment(chartTypes) {
-            return false;//chartTypes.indexOf("EpivizNavigation") !== -1;
-        }
-
-        _tableDataExists(tableData) {
-            return tableData.length > 0;
-        }
-
-        _tableDataExistsCollection(tableData) {
-            return this.selectedCollection && this.selectedCollection != "" ? this._tableDataExists(tableData) : false;
-        }
-
-        selectedCollectionChanged(newVal, oldVal) {
-            var self = this;
-
-            if (this.selectedCollection && this.selectedCollection != "") {
-                self.$.modal.refit();
-                // self.$.modal.center();
-            }
-        }
-
-        _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
-            if (selectedChart !== null && this._charts.includes(selectedChart)) {
-                if (this.tabSelected === 1 && this.selectedExistingMeasurements && this.selectedExistingMeasurements.length > 0) {
-                    return true;
-                }
-
-                if (this.tabSelected === 0 && this.selectedMeasurements && this.selectedMeasurements.length > 0) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * API to add a chart
-         * @param {chartType}: chart type to add/create. Must be one of the defined chart types in _chartTypes attribute.
-         * @param {measurements}: measurements to use.
-         * TODO:
-         * @param {data}: data for the chart (for json-based-charts).
-         */
-        _addChart(chartType, measurements) {
-
-            var self = this;
-            var envElement = self.parentNode.parentNode.parentNode.parentNode.nodeName == "EPIVIZ-NAVIGATION" ? self.parentNode.parentNode.parentNode.parentNode : self.parentNode.parentNode.parentNode;
-            var envElement = self._parentContainer;
-
-            var chartElem = document.createElement(self._chartTypes[chartType]);
-            chartElem.slot = "charts";
-            chartElem.range = envElement.range;
-            var chartElemType = chartElem._createChart();
-
-            chartElem.setAttribute("measurements", JSON.stringify(measurements));
-            envElement.appendChild(chartElem);
-        }
-
-        _refitModal() {
-            setTimeout(() => this.$.modal.refit(), 0);
-        }
-
-        _addNavigation() {
-            var envElement = this._parentContainer;
-            var elem = document.createElement("epiviz-navigation");
-
-            elem.setAttribute("chr", "chr19");
-            elem.setAttribute("start", 10084603);
-            elem.setAttribute("end", 10312571);
-            elem.setAttribute("no-logo", true);
-            elem.slot = "charts";
-
-            envElement.appendChild(elem);
-        }
-
-        _getExistingChartMeasurements(envElement) {
-            var self = this;
-            var currentCharts = [];
-            var currentChartObj = {};
-            var currChartCollections = [];
-
-            if(envElement) {
-              let navChildren =
-                  Polymer.FlattenedNodesObserver.getFlattenedNodes(envElement).filter(n => n.nodeType === Node.ELEMENT_NODE);
-              var numChildren = navChildren.length;
-              for (var index = 0; index < numChildren; index++) {
-                  var currentChild = navChildren[index];
-                  currentCharts.push({ "node": currentChild.nodeName, "id": currentChild.plotId });
-                  currentChartObj[currentChild.plotId] = currentChild.measurements;
-                  if (currentChild.nodeName != "EPIVIZ-GENES-TRACK") {
-                      currentChild.measurements.forEach(function(m) {
-                          var tempM = JSON.parse(JSON.stringify(m));
-                          if (!tempM["annotation"]) {
-                              tempM["annotation"] = {};
-                          }
-                          tempM["annotation"]["collection"] = currentChild.plotId;
-                          currChartCollections.push(tempM);
-                      });
-                  }
+      static get is() { return 'epiviz-measurement-browser'; }
+
+      static get properties() {
+        return {
+
+          msApi: {
+            type: String
+          },
+
+          measurementsRaw: {
+            type: Array,
+            notify: true,
+            value: []
+          },
+
+          genome: {
+            type: String,
+            notify: true,
+            value: "hg38"
+          },
+
+          /**
+          * currently available measurements on the app
+          * uses measurements available from the `epiviz-data-source` element.
+          *
+          * @type {Array.<epiviz.ui.charts.CustomSetting>}
+          */
+          measurements: {
+            type: Object,
+            notify: true
+          },
+
+          /**
+          * selected measurements from browser.
+          * chartType:
+          * measurement:
+          * @type {Object}
+          */
+          selection: {
+            type: Object,
+            notify: true,
+            value: {}
+          },
+
+          selectedMeasurements: {
+            type: Array,
+            notify: true
+          },
+
+          selectedExistingMeasurements: {
+            type: Array,
+            notify: true,
+          },
+
+          /**
+          * selected chart from the browser.
+          *
+          * @type {Array.<epiviz.ui.charts.CustomSetting>}
+          */
+          selectedChart: {
+            type: String,
+            notify: true,
+            value: "MultiStackedLineTrack",
+            observer: "_refitModal",
+          },
+
+          /**
+          * currently available chart types on the app.
+          */
+          _chartTypes: {
+            type: Object,
+            notify: true,
+            reflectToAttribute: true,
+            value: function () {
+              return {
+                // "GenesTrack": "epiviz-genes-track",
+                "TranscriptTrack": "epiviz-transcript-track",
+                "BlocksTrack": 'epiviz-blocks-track',
+                "InteractionTrack": 'epiviz-interaction-track',
+                "StackedBlocksTrack": 'epiviz-stacked-blocks-track',
+                "HeatmapPlot": "epiviz-heatmap-plot",
+                "ScatterPlot": "epiviz-scatter-plot",
+                "LineTrack": 'epiviz-line-track',
+                "GwasTrack": 'epiviz-gwas-track',
+                "StackedLineTrack": 'epiviz-stacked-line-track',
+                "MultiStackedLineTrack": 'epiviz-multistacked-line-track',
+                "MirrorLineTrack": "epiviz-line-track-mirror",
+                "LinePlot": 'epiviz-line-plot',
+                "StackedLinePlot": 'epiviz-stacked-line-plot',
+                "EpivizNavigation": 'epiviz-navigation'
               }
             }
+          },
 
-            return {
-              "currentChartObj": currentChartObj,
-              "currentCharts": currentCharts,
-              "currChartCollections": currChartCollections
-            }
-        }
+          _charts: {
+            type: Array,
+            notify: true,
+            computed: "_getCharts(_chartTypes, _parentContainer)"
+          },
 
-        _showModal(event) {
-            var self = this;
-            var envElement = this._parentContainer;
+          /**
+          * parentContainer
+          */
+          _parentContainer: {
+            type: Object,
+          },
 
-            this.$.getCollections.generateRequest();
-            // this.$.modal.open();
-        }
+          _jsonMeasurements: {
+            type: Array,
+          },
 
-        _close() {
-            this.selectedChart = null;
-            var newCharts = this.shadowRoot.querySelector("data-filter.new-charts");
-            var currCharts = this.shadowRoot.querySelector("data-filter.curr-charts");
-            if (newCharts) {
-                newCharts._deselectAll();
-            }
-            if (currCharts) {
-                currCharts._deselectAll();
-            }
-            this.set("selectedMeasurements", []);
-            this.set("selectedExistingMeasurements", []);
-        }
+          tabSelected: {
+            type: Number,
+            notify: true,
+            value: function () {
+              return 0;
+            },
+            observer: "_refitModal",
+          },
 
-        _submit() {
-            var envElement = this._parentContainer;
-            var fids;
-            var fmeasurements;
-            if (this.tabSelected === 1) {
-                fids = this.selectedExistingMeasurements.map(x => x.id);
-                fmeasurements = this.currentChartObj[fids[0]];
-            } else if (this.tabSelected === 0) {
-                fids = this.selectedMeasurements.map(x => x.id);
-                fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
-                fmeasurements = fmeasurements.raw();
-            }
+          projects: {
+            type: Array,
+            notify: true
+          },
 
+          projectId: {
+            type: String,
+            observer: "_fetchCollections"
+          },
 
-            this.selection = {};
-            this.selection.chartType = this.selectedChart;
+          collectionId: {
+            type: String,
+            notify: true,
+            observer: "_collectionIdChanged"
+          },
 
-            var chartElem = document.createElement(this._chartTypes[this.selection.chartType]);
-            chartElem.slot = "charts";
-            chartElem.range = envElement.range;
-            var chartElemType = chartElem._createChart();
+          collections: {
+            type: Array,
+            notify: true
+          },
 
-            chartElem.setAttribute("measurements", JSON.stringify(fmeasurements));
-            envElement.appendChild(chartElem);
+          collectionsObj: {
+            type: Object,
+            notify: true
+          },
 
-            this._close();
-        }
-
-        /**
-         * handles form show modal action
-         */
-        showAdd(target, callback) {
-            this.callback = callback;
-            this.$.modal.positionTarget = document;
-            this.$.modal.open();
-        }
-
-        /**
-         * handles form close modal action
-         */
-        closeAddDialog() {
-            this.$.modal.close();
-        }
-
-        handleGetCollectionById(e) {
-          var self = this,
-            data = e.detail.response;
-
-            self.set("selectedCollection", data.name);
-
-            self._showModal();
-        }
-
-        loadCollection(collection) {
-            var self = this;
-            // this.$.modal.open();
-
-            // this.$.collectionElement.value = collection;
-            // this._chartSelectionChanged();
-
-            var ajaxElem = this.$.getCollectionById;
-            ajaxElem.url = this.msApi + "collections/" + collection;
-            ajaxElem.generateRequest();
-        }
-
-        getUrlParameter(sParam) {
-          var currPage = decodeURIComponent(window.location.search.substring(1));
-          var pageVars = currPage.split('&');
-
-          for (var i = 0; i < pageVars.length; i++) {
-              var pageParamName = pageVars[i].split('=');
-
-              if (pageParamName[0] === sParam) {
-                  return pageParamName[1] === undefined ? true : pageParamName[1];
-              }
+          filters: {
+            type: Array,
+            notify: true
           }
         }
+      }
+
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        document.dispatchEvent(new CustomEvent('mBrowserReady',
+          {
+            bubbles: true
+          }
+        ));
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+      }
+
+      ready() {
+        super.ready();
+      }
+
+      _fetchMeasurements() {
+        this.$.getMeasurements.generateRequest();
+      }
+
+      _collectionIdChanged(newVal, oldVal) {
+        if (newVal) {
+          this._fetchMeasurements();
+        }
+      }
+
+      _fetchCollections(newVal, oldVal) {
+        // console.log('projectId changed (new/old)', newVal, oldVal);
+        if (newVal) {
+          this.$.getCollections.generateRequest();
+        }
+      }
+
+      handleGetProjects(e) {
+        const data = e.detail.response;
+
+        const projects = {};
+        data.forEach((it) => projects[it.project_id] = it);
+        this.set('projects', projects);
+
+        this.$.modal.open();
+        this.$.modal.refit();
+      }
+
+      handleGetCollections(e) {
+        // var self = this;
+        const data = e.detail.response;
+        // console.log('collecions2', data);
+
+        const collections = [];
+        const collectionsObj = {};
+        data.forEach(function (it) {
+          collectionsObj[it.collection_id] = it.collection_id;
+        });
+
+        this.setProperties({
+          collectionsObj,
+          collectionId: null
+        });
+        // this.set("collectionsObj", collectionsObj)
+        // this.set("collectionId", null);
+      }
+
+      handleGetMeasurements(e) {
+        const data = e.detail.response;
+        this.measurementsHandling(data);
+        this._updateMeasurmentView();
+      }
+
+      _precookMeasurements(measurements) {
+        const pdata = []
+        measurements.forEach(function (m) {
+          var ptype = "range";
+          if (["bp"].includes(m.datatype)) {
+            ptype = "feature";
+          }
+
+          var tmea = {
+            "id": m.measurement_id,
+            "name": m.name,
+            "type": ptype,
+            "datasourceId": m.url,
+            "datasourceGroup": m.url,
+            "dataprovider": "fileapi",
+            "formula": null,
+            "defaultChartType": "track",
+            "annotation": m.annotation,
+            "metadata": m.metadata
+          }
+
+          tmea.annotation.collection = m.collection_id;
+          tmea.annotation.collection_name = m.collection_name;
+          tmea.annotation._filetype = m.file_type;
+          tmea.annotation.genome = m.genome;
+
+          pdata.push(tmea);
+        });
+        return pdata;
+      }
+
+      measurementsHandling(data) {
+        const envElement = this._parentContainer;
+        this.measurementsRaw = this._precookMeasurements(data);
+        const tcurrChart = this._getExistingChartMeasurements(envElement);
+        this.currentChartObj = tcurrChart.currentChartObj;
+        this.currChartCollections = tcurrChart.currChartCollections;
+
+        for (let k in this.filters) {
+          this.filters[k] = [];
+        }
+        this.setProperties({
+          filters: this.filters,
+          //todo make this.defaultChart
+          selectedChart: "MultiStackedLineTrack"
+        });
+        this._updateMeasurmentView();
+
+        this.$.modal.refit();
+      }
+
+      _getJSONMeasurements(data) {
+        return data.raw();
+      }
+
+      _getProjectKeys(projects) {
+        return Object.keys(projects);
+      }
+
+      _getProjectValue(item) {
+        return this.projects[item].project_id ? this.projects[item].project_id : item;
+      }
+
+      _getCollectionKeys(collectionsObj) {
+        return Object.keys(collectionsObj);
+      }
+
+      _getCollectionValue(item) {
+        return this.collectionsObj[item] ? this.collectionsObj[item] : item;
+      }
+
+      _updateMeasurmentView() {
+        let data = [];
+        this.selection = {};
+        this.selection.chartType = this.selectedChart;
+        this.measurements = this.measurementsRaw;
+
+        if (this.selection.chartType == "GenesTrack") {
+          data = this.measurements.filter(m => m.defaultChartType == "Genes Track");
+        }
+        else if (this.selection.chartType.indexOf("Blocks") != -1) {
+          data = this.measurements.filter(m => m.type == "range");
+        }
+        else if (this.selection.chartType.indexOf("Plot") != -1) {
+          data = this.measurements.filter(m => m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
+        }
+        else if (this.selection.chartType.indexOf("Gwas") != -1) {
+          data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
+        }
+        else if (this.selection.chartType.indexOf("Transcript") != -1) {
+          data = this.measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
+        }
+        else if (this.selection.chartType.indexOf("Interaction") != -1) {
+          data = this.measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
+
+          if (this.collectionId && this.collectionId != "") {
+            data = data.filter(m => m["annotation"]["collection"] == this.collectionId );
+          }
+        }
+        else {
+          data = this.measurements.filter(m => m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]));
+        }
+
+        const nData = this._clearingMeasurementsData(data, this.genome);
+
+        this.set("_jsonMeasurements", nData);
+        this.$.modal.refit();
+      }
+
+      _clearingMeasurementsData(measurements, genome) {
+        const clearedMeasurements = [];
+        const mData = JSON.parse(JSON.stringify(measurements));
+        mData.forEach(function (d, i) {
+
+          if (d.annotation["genome"] == genome) {
+            let temp = d.annotation;
+            if (temp == undefined) {
+              temp = {};
+            }
+
+            delete temp["tags"];
+            delete d["datasourceId"];
+            delete d["datasourceGroup"];
+            delete d["dataprovider"];
+            delete d["formula"];
+            delete d["defaultChartType"];
+            delete d["metadata"];
+            delete d["minValue"];
+            delete d["maxValue"];
+
+            d.annotation = temp;
+            clearedMeasurements.push(d);
+          }
+        });
+
+        return clearedMeasurements;
+      }
+
+
+      /**
+       * Get Available Chart Types
+       */
+      _getCharts(chartTypes, parentContainer) {
+        if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
+          delete chartTypes["EpivizNavigation"];
+        }
+        return Object.keys(chartTypes);
+      }
+
+      _isEnvironment(chartTypes) {
+        return false;//chartTypes.indexOf("EpivizNavigation") !== -1;
+      }
+
+      _tableDataExists(tableData) {
+        return tableData?.length > 0;
+      }
+
+      _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
+        if (selectedChart !== null && this._charts.includes(selectedChart)) {
+          if (this.tabSelected === 1 && this.selectedExistingMeasurements && this.selectedExistingMeasurements.length > 0) {
+            return true;
+          }
+
+          if (this.tabSelected === 0 && this.selectedMeasurements && this.selectedMeasurements.length > 0) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      /**
+       * API to add a chart
+       * @param {chartType}: chart type to add/create. Must be one of the defined chart types in _chartTypes attribute.
+       * @param {measurements}: measurements to use.
+       * TODO:
+       * @param {data}: data for the chart (for json-based-charts).
+       */
+      _addChart(chartType, measurements) {
+
+        var self = this;
+        var envElement = self.parentNode.parentNode.parentNode.parentNode.nodeName == "EPIVIZ-NAVIGATION" ? self.parentNode.parentNode.parentNode.parentNode : self.parentNode.parentNode.parentNode;
+        var envElement = self._parentContainer;
+
+        var chartElem = document.createElement(self._chartTypes[chartType]);
+        chartElem.slot = "charts";
+        chartElem.range = envElement.range;
+        var chartElemType = chartElem._createChart();
+
+        chartElem.setAttribute("measurements", JSON.stringify(measurements));
+        envElement.appendChild(chartElem);
+      }
+
+      _refitModal() {
+        setTimeout(() => this.$.modal.refit(), 0);
+      }
+
+      _addNavigation() {
+        var envElement = this._parentContainer;
+        var elem = document.createElement("epiviz-navigation");
+
+        elem.setAttribute("chr", "chr19");
+        elem.setAttribute("start", 10084603);
+        elem.setAttribute("end", 10312571);
+        elem.setAttribute("no-logo", true);
+        elem.slot = "charts";
+
+        envElement.appendChild(elem);
+      }
+
+      _getExistingChartMeasurements(envElement) {
+        const currentCharts = [];
+        const currentChartObj = {};
+        const currChartCollections = [];
+
+        if (envElement) {
+          let navChildren =
+            Polymer.FlattenedNodesObserver.getFlattenedNodes(envElement).filter(n => n.nodeType === Node.ELEMENT_NODE);
+          const numChildren = navChildren.length;
+          for (let index = 0; index < numChildren; index++) {
+            const currentChild = navChildren[index];
+            currentCharts.push({ "node": currentChild.nodeName, "id": currentChild.plotId });
+            currentChartObj[currentChild.plotId] = currentChild.measurements;
+            if (currentChild.nodeName != "EPIVIZ-GENES-TRACK") {
+              currentChild.measurements.forEach(function (m) {
+                const tempM = JSON.parse(JSON.stringify(m));
+                if (!tempM["annotation"]) {
+                  tempM["annotation"] = {};
+                }
+                tempM["annotation"]["collection"] = currentChild.plotId;
+                currChartCollections.push(tempM);
+              });
+            }
+          }
+        }
+
+        return {
+          "currentChartObj": currentChartObj,
+          "currentCharts": currentCharts,
+          "currChartCollections": currChartCollections
+        }
+      }
+
+      _showModal(event) {
+        this.$.getProjects.generateRequest();
+      }
+
+      _close() {
+        this.selectedChart = null;
+        var newCharts = this.shadowRoot.querySelector("data-filter.new-charts");
+        var currCharts = this.shadowRoot.querySelector("data-filter.curr-charts");
+        if (newCharts) {
+          newCharts._deselectAll();
+        }
+        if (currCharts) {
+          currCharts._deselectAll();
+        }
+        this.setProperties({
+          selectedMeasurements: [],
+          selectedExistingMeasurements: []
+        });
+      }
+
+      _submit() {
+        var envElement = this._parentContainer;
+        var fids;
+        var fmeasurements;
+        if (this.tabSelected === 1) {
+          fids = this.selectedExistingMeasurements.map(x => x.id);
+          fmeasurements = this.currentChartObj[fids[0]];
+        } else if (this.tabSelected === 0) {
+          fids = this.selectedMeasurements.map(x => x.id);
+          fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
+          fmeasurements = fmeasurements.raw();
+        }
+
+
+        this.selection = {};
+        this.selection.chartType = this.selectedChart;
+
+        var chartElem = document.createElement(this._chartTypes[this.selection.chartType]);
+        chartElem.slot = "charts";
+        chartElem.range = envElement.range;
+        var chartElemType = chartElem._createChart();
+
+        chartElem.setAttribute("measurements", JSON.stringify(fmeasurements));
+        envElement.appendChild(chartElem);
+
+        this._close();
+      }
+
+      /**
+       * handles form show modal action
+       */
+      showAdd(target, callback) {
+        this.callback = callback;
+        this.$.modal.positionTarget = document;
+        this.$.modal.open();
+      }
+
+      /**
+       * handles form close modal action
+       */
+      closeAddDialog() {
+        this.$.modal.close();
+      }
     };
 
     customElements.define(EpivizMeasurementBrowser.is, EpivizMeasurementBrowser);
