@@ -454,11 +454,7 @@
         for (let k in this.filters) {
           this.filters[k] = [];
         }
-        this.setProperties({
-          filters: this.filters,
-          //todo make this.defaultChart
-          selectedChart: "MultiStackedLineTrack"
-        });
+        this.set("filters", this.filters);
         this._updateMeasurmentView();
 
         this.$.modal.refit();
