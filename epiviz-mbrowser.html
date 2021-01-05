@@ -454,11 +454,7 @@
         for (let k in this.filters) {
           this.filters[k] = [];
         }
-        this.setProperties({
-          filters: this.filters,
-          //todo make this.defaultChart
-          selectedChart: "MultiStackedLineTrack"
-        });
+        this.set("filters", this.filters);
         this._updateMeasurmentView();
 
         this.$.modal.refit();
@@ -497,7 +493,7 @@
           data = this.measurements.filter(m => m.type == "range");
         }
         else if (this.selection.chartType.indexOf("Plot") != -1) {
-          data = this.measurements.filter(m => m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
+          data = this.measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
         }
         else if (this.selection.chartType.indexOf("Gwas") != -1) {
           data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
@@ -513,7 +509,7 @@
           }
         }
         else {
-          data = this.measurements.filter(m => m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]));
+          data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
         }
 
         const nData = this._clearingMeasurementsData(data, this.genome);
@@ -567,7 +563,7 @@
       }
 
       _tableDataExists(tableData) {
-        return tableData?.length > 0;
+        return tableData.length > 0;
       }
 
       _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
