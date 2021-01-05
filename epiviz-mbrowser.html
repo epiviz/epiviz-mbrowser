@@ -128,7 +128,7 @@
           <div class="title">Choose a project</div>
           <paper-dropdown id="collectionProject" label="project" value="{{projectId}}" no-animations no-label-float>
             <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
-              <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
+              <paper-item on-click="_chooseProjectHandler" value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
             </template>
           </paper-dropdown>
           <div class="title"> and select datasets below</div>
@@ -146,7 +146,7 @@
         </div>
         <div>
           <div class="title">Choose a collection</div>
-          <paper-dropdown id="collectionElement" label="collection" value="{{collectionId}}" no-animations
+          <paper-dropdown id="collectionElement" label="collection" value="[[collectionId]]" no-animations
             no-label-float>
             <template is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
               <paper-item value$="[[item]]">[[_getCollectionValue(item)]]
@@ -328,7 +328,7 @@
 
           collectionsObj: {
             type: Object,
-            notify: true
+            // notify: true
           },
 
           filters: {
@@ -364,14 +364,23 @@
         this.$.getMeasurements.generateRequest();
       }
 
+      _chooseProjectHandler(e) {
+        const item = e.target.dataset.item;
+      
+        // e.target.modelForElement(e.target).set('item.selected', true)
+        console.log('choose proj', e, item);
+        debugger;
+      }
+
       _collectionIdChanged(newVal, oldVal) {
+        console.log('coll ID newVal, oldVal', newVal, oldVal)
         if (newVal) {
           this._fetchMeasurements();
         }
       }
 
       _fetchCollections(newVal, oldVal) {
-        // console.log('projectId changed (new/old)', newVal, oldVal);
+        console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
           this.$.getCollections.generateRequest();
         }
@@ -382,7 +391,11 @@
 
         const projects = {};
         data.forEach((it) => projects[it.project_id] = it);
-        this.set('projects', projects);
+        this.setProperties({
+          projects,
+          projectId: data[1].project_id,
+        });
+        console.log('projectId', data[1].project_id);
 
         this.$.modal.open();
         this.$.modal.refit();
@@ -399,12 +412,17 @@
           collectionsObj[it.collection_id] = it.collection_id;
         });
 
+        console.log('data[0].collection_id', data[0].collection_id, data);
+
         this.setProperties({
           collectionsObj,
-          collectionId: null
+          // collectionId: data[0].collection_id
         });
         // this.set("collectionsObj", collectionsObj)
-        // this.set("collectionId", null);
+        // this.set("collectionId", 'roadmap::roadmap');
+        // if (data[0]) {
+          this.set("collectionId", data[0].collection_id);
+        // }
       }
 
       handleGetMeasurements(e) {
@@ -485,7 +503,7 @@
         this.selection = {};
         this.selection.chartType = this.selectedChart;
         this.measurements = this.measurementsRaw;
-
+      if (this.selection.chartType) {
         if (this.selection.chartType == "GenesTrack") {
           data = this.measurements.filter(m => m.defaultChartType == "Genes Track");
         }
@@ -511,7 +529,7 @@
         else {
           data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
         }
-
+      }
         const nData = this._clearingMeasurementsData(data, this.genome);
 
         this.set("_jsonMeasurements", nData);
