@@ -148,8 +148,8 @@
           <div class="title">Choose a collection</div>
           <paper-dropdown id="collectionElement" label="collection" value="[[collectionId]]" no-animations
             no-label-float>
-            <template is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
-              <paper-item value$="[[item]]">[[_getCollectionValue(item)]]
+            <template is="dom-repeat" id="collectionsTemplate" items="[[_getCollectionKeys(collectionsObj)]]">
+              <paper-item value$="[[item]]" >[[_getCollectionValue(item)]]
               </paper-item>
             </template>
           </paper-dropdown>
@@ -320,12 +320,12 @@
             notify: true,
             observer: "_collectionIdChanged"
           },
-
+          
           collections: {
             type: Array,
             notify: true
           },
-
+          
           collectionsObj: {
             type: Object,
             // notify: true
@@ -373,7 +373,14 @@
       }
 
       _collectionIdChanged(newVal, oldVal) {
-        console.log('coll ID newVal, oldVal', newVal, oldVal)
+        console.log('coll ID newVal, oldVal', newVal, oldVal);
+        
+        const model = this.shadowRoot.querySelector("#collectionsTemplate").indexForElement(newVal);
+        debugger;
+
+        model.set('item.selected', true);
+        // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', true);
+        // this.shadowRoot.querySelector("#cardRepeater").render();
         if (newVal) {
           this._fetchMeasurements();
         }
@@ -393,9 +400,9 @@
         data.forEach((it) => projects[it.project_id] = it);
         this.setProperties({
           projects,
-          projectId: data[1].project_id,
+          projectId: data[0].project_id,
         });
-        console.log('projectId', data[1].project_id);
+        console.log('projectId', data[0].project_id);
 
         this.$.modal.open();
         this.$.modal.refit();
