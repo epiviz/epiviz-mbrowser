@@ -497,7 +497,7 @@
           data = this.measurements.filter(m => m.type == "range");
         }
         else if (this.selection.chartType.indexOf("Plot") != -1) {
-          data = this.measurements.filter(m => m.type != "range" && ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
+          data = this.measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
         }
         else if (this.selection.chartType.indexOf("Gwas") != -1) {
           data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
@@ -513,7 +513,7 @@
           }
         }
         else {
-          data = this.measurements.filter(m => m.type != "range" && ["bigwig"].includes(m.annotation["_filetype"]));
+          data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
         }
 
         const nData = this._clearingMeasurementsData(data, this.genome);
