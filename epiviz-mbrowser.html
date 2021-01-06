@@ -381,6 +381,12 @@
           initialLaunch: {
             type: Number,
             value: 1
+          },
+
+          collectionGenome: {
+            type: String,
+            notify: true,
+            reflectToAttribute: true
           }
         }
       }
@@ -482,6 +488,11 @@
         self.setProperties({
           collectionsObj: collectionsObj,
         });
+
+        if(self.initialLaunch && self.autoOpen) {
+          self.collectionGenome = collectionsObj[Object.keys(collectionsObj)[0]].genomes[0];
+          self.genome = self.collectionGenome;
+        }
 
         if (self.initialLaunch > 1 || !self.collectionId) {
           self.collectionId = undefined;
@@ -738,6 +749,8 @@
       }
 
       _showModal(event) {
+        this.autoOpen = false;
+
         this.$.getProjects.generateRequest();
 
         this.$.modal.open();
@@ -745,6 +758,7 @@
       }
 
       openProject(project) {
+        this.autoOpen = true;
         this.$.getProjects.generateRequest();
 
         this.set("projectId", project);
@@ -754,6 +768,7 @@
       }
 
       openCollection(collection) {
+        this.autoOpen = true;
 
         var project = collection.split("::");
 
