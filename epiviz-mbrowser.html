@@ -758,7 +758,7 @@
 
         if(this.shadowRoot.querySelector("#cardElem")) {
             this.shadowRoot.querySelector("#cardElem")._selected = {};
-            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+            this.shadowRoot.querySelector("#cardElem").filters = this.filters;
         }
 
       }
@@ -774,7 +774,7 @@
 
         if(this.shadowRoot.querySelector("#cardElem")) {
             this.shadowRoot.querySelector("#cardElem")._selected = {};
-            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+            this.shadowRoot.querySelector("#cardElem").filters = this.filters;
         }
       }
 
@@ -793,12 +793,12 @@
 
         if(this.shadowRoot.querySelector("#cardElem")) {
             this.shadowRoot.querySelector("#cardElem")._selected = {};
-            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+            this.shadowRoot.querySelector("#cardElem").filters = this.filters;
         }
       }
 
       _close() {
-        this.selectedChart = null;
+        // this.selectedChart = null;
         var newCharts = this.shadowRoot.querySelector("data-filter.new-charts");
         var currCharts = this.shadowRoot.querySelector("data-filter.curr-charts");
         if (newCharts) {
@@ -807,10 +807,8 @@
         if (currCharts) {
           currCharts._deselectAll();
         }
-        this.setProperties({
-          selectedMeasurements: [],
-          selectedExistingMeasurements: []
-        });
+        this.set("selectedMeasurements", []);
+        this.set("selectedExistingMeasurements", []);
       }
 
       _submit() {
