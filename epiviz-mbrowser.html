@@ -202,7 +202,7 @@
           <div class="dialog-content">
             <template is="dom-if" if="[[_tableDataExists(_jsonMeasurements)]]">
               <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
-                selected-items="[[selectedMeasurements]]">
+                selected-items="{{selectedMeasurements}}">
               </data-filter>
             </template>
             <p class="infoMessage" hidden$="[[_tableDataExists(_jsonMeasurements)]]">
