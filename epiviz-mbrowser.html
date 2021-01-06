@@ -755,6 +755,12 @@
 
         this.$.modal.open();
         this.$.modal.refit();
+
+        if(this.shadowRoot.querySelector("#cardElem")) {
+            this.shadowRoot.querySelector("#cardElem")._selected = {};
+            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+        }
+
       }
 
       openProject(project) {
@@ -765,6 +771,11 @@
 
         this.$.modal.open();
         this.$.modal.refit();
+
+        if(this.shadowRoot.querySelector("#cardElem")) {
+            this.shadowRoot.querySelector("#cardElem")._selected = {};
+            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+        }
       }
 
       openCollection(collection) {
@@ -779,6 +790,11 @@
 
         this.$.modal.open();
         this.$.modal.refit();
+
+        if(this.shadowRoot.querySelector("#cardElem")) {
+            this.shadowRoot.querySelector("#cardElem")._selected = {};
+            this.shadowRoot.querySelector("#cardElem").filters = self.filters;
+        }
       }
 
       _close() {
