@@ -128,17 +128,17 @@
     <!-- local DOM goes here -->
 
     <iron-ajax id="getProjects" method="GET" 
-      url="[[msApi]]/api/v1/projects/"
+      url="[[msApi]]projects/"
       handle-as="json" on-response="handleGetProjects" debounce-duration="300">
     </iron-ajax>
 
     <iron-ajax id="getCollections" method="GET"
-      url="[[msApi]]/api/v1/projects/[[projectId]]/collections" handle-as="json"
+      url="[[msApi]]projects/[[projectId]]/collections" handle-as="json"
       on-response="handleGetCollections" debounce-duration="300"></iron-ajax>
     </iron-ajax>
 
     <iron-ajax id="getMeasurements" method="GET"
-      url="[[msApi]]/api/v1/collections/[[collectionId]]/ms" handle-as="json"
+      url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
