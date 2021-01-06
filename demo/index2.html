@@ -16,8 +16,8 @@
       <script>
         document.addEventListener("WebComponentsReady", function() {
           var elem = document.createElement("epiviz-measurement-browser");
-          elem.setAttribute("measurements-raw", JSON.stringify(resp));
-          // elem.setAttribute("ms-api", "http://localhost:8002/api/v1/ms");
+          // elem.setAttribute("measurements-raw", JSON.stringify(resp));
+          elem.setAttribute("ms-api", "https://dev.gepiviz.science.roche.com/emd");
           elem.genome = "hg19";
           document.querySelector("#measurement").appendChild(elem);
         })
