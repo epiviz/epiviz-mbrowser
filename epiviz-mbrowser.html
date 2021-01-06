@@ -16,6 +16,42 @@
 <link rel="import" href="../paper-tabs/paper-tabs.html" />
 <link rel="import" href="../iron-pages/iron-pages.html" />
 <link rel="import" href="../paper-dropdown/paper-dropdown.html" />
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html" />
+
+<script>
+  // window.addEventListener('WebComponentsReady', function() {
+      document.addEventListener('mBrowserReady', function() {
+          var project = getUrlParameter("project");
+
+          if(project) {
+            // document.querySelector("epiviz-measurement-browser").openProject(project);
+            document.querySelector("epiviz-app").shadowRoot.querySelector("epiviz-navigation")
+                   .shadowRoot.querySelector("epiviz-measurement-browser").openProject(project);
+          } else {
+            var collection = getUrlParameter("collection");
+
+            if(collection) {
+              // document.querySelector("epiviz-measurement-browser").openCollection(collection);
+                document.querySelector("epiviz-app").shadowRoot.querySelector("epiviz-navigation")
+                   .shadowRoot.querySelector("epiviz-measurement-browser").openCollection(collection);
+            }
+          }
+      });
+  // });
+
+  function getUrlParameter(sParam) {
+      var currPage = decodeURIComponent(window.location.search.substring(1));
+      var pageVars = currPage.split('&');
+
+      for (var i = 0; i < pageVars.length; i++) {
+          var pageParamName = pageVars[i].split('=');
+
+          if (pageParamName[0] === sParam) {
+              return pageParamName[1] === undefined ? true : pageParamName[1];
+          }
+      }
+  };
+</script>
 
 <!--
 `<epiviz-measurement-browser>`
@@ -90,14 +126,19 @@
       }
     </style>
     <!-- local DOM goes here -->
-    <iron-ajax id="getProjects" method="GET" url="https://dev.gepiviz.science.roche.com/emd/api/v1/projects/"
-      handle-as="json" on-response="handleGetProjects" debounce-duration="300"></iron-ajax>
+
+    <iron-ajax id="getProjects" method="GET" 
+      url="[[msApi]]/api/v1/projects/"
+      handle-as="json" on-response="handleGetProjects" debounce-duration="300">
+    </iron-ajax>
+
     <iron-ajax id="getCollections" method="GET"
-      url="https://dev.gepiviz.science.roche.com/emd/api/v1/projects/[[projectId]]/collections" handle-as="json"
+      url="[[msApi]]/api/v1/projects/[[projectId]]/collections" handle-as="json"
       on-response="handleGetCollections" debounce-duration="300"></iron-ajax>
     </iron-ajax>
+
     <iron-ajax id="getMeasurements" method="GET"
-      url="https://dev.gepiviz.science.roche.com/emd/api/v1/collections/[[collectionId]]/ms" handle-as="json"
+      url="[[msApi]]/api/v1/collections/[[collectionId]]/ms" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
@@ -125,35 +166,35 @@
     <paper-dialog id="modal" modal>
       <div class="header">
         <div>
-          <div class="title">Choose a project</div>
-          <paper-dropdown id="collectionProject" label="project" value="{{projectId}}" no-animations no-label-float>
-            <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
-              <paper-item on-click="_chooseProjectHandler" value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
-            </template>
-          </paper-dropdown>
-          <div class="title"> and select datasets below</div>
+          <div class="title">Choose project</div>
+          <paper-dropdown-menu id="collectionProject" label="project" no-animations no-label-float>
+            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{projectId}}" attr-for-selected="value">
+              <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
+                <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
+              </template>
+            </paper-listbox>
+          </paper-dropdown-menu>
         </div>
         <div>
-          <div class="title">Choose a chart</div>
-          <paper-dropdown label="Chart" value="{{selectedChart}}" no-animations no-label-float>
+          <div class="title">Choose collection</div>
+          <paper-dropdown-menu id="collectionElement" label="collection" no-animations no-label-float>
+            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{collectionId}}" attr-for-selected="value">
+              <template id="collRepeater" is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
+                <paper-item value$="[[item]]">[[_getCollectionValue(item)]]</paper-item>
+              </template>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </div>
+        <div>
+          <div class="title">Select chart type</div>
+          <paper-dropdown label="chart" value="{{selectedChart}}" no-animations no-label-float>
             <template is="dom-repeat" items="{{_charts}}">
-              <paper-item on-click="_updateMeasurmentView" value$="[[item]]">[[item]]</paper-item>
+              <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
             </template>
           </paper-dropdown>
           <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
             <paper-tab>All datasets </paper-tab>
           </paper-tabs>
-        </div>
-        <div>
-          <div class="title">Choose a collection</div>
-          <paper-dropdown id="collectionElement" label="collection" value="[[collectionId]]" no-animations
-            no-label-float>
-            <template is="dom-repeat" id="collectionsTemplate" items="[[_getCollectionKeys(collectionsObj)]]">
-              <paper-item value$="[[item]]" >[[_getCollectionValue(item)]]
-              </paper-item>
-            </template>
-          </paper-dropdown>
-          <div class="title"> and select datasets below</div>
         </div>
       </div>
       <paper-dialog-scrollable>
@@ -165,8 +206,8 @@
               </data-filter>
             </template>
             <p class="infoMessage" hidden$="[[_tableDataExists(_jsonMeasurements)]]">
-              No measurement are available for the chart type and/or collection.
-              Choose a different chart or collection
+              No measurements are available for the chart type and/or collection.
+              Choose a different collection or chart
             </p>
           </div>
         </iron-pages>
@@ -312,7 +353,8 @@
 
           projectId: {
             type: String,
-            observer: "_fetchCollections"
+            notify: true,
+            observer: "_projectIdChanged"
           },
 
           collectionId: {
@@ -334,6 +376,11 @@
           filters: {
             type: Array,
             notify: true
+          },
+
+          initialLaunch: {
+            type: Number,
+            value: 1
           }
         }
       }
@@ -364,32 +411,35 @@
         this.$.getMeasurements.generateRequest();
       }
 
-      _chooseProjectHandler(e) {
-        const item = e.target.dataset.item;
-      
-        // e.target.modelForElement(e.target).set('item.selected', true)
-        console.log('choose proj', e, item);
-        debugger;
-      }
-
       _collectionIdChanged(newVal, oldVal) {
-        console.log('coll ID newVal, oldVal', newVal, oldVal);
-        
-        const model = this.shadowRoot.querySelector("#collectionsTemplate").indexForElement(newVal);
-        debugger;
-
-        model.set('item.selected', true);
-        // this.shadowRoot.querySelector("#cardRepeater").modelForElement(e.target).set('item.selected', true);
-        // this.shadowRoot.querySelector("#cardRepeater").render();
+        // console.log('coll ID newVal, oldVal', newVal, oldVal);
         if (newVal) {
           this._fetchMeasurements();
         }
       }
 
-      _fetchCollections(newVal, oldVal) {
-        console.log('projectId changed (new/old)', newVal, oldVal);
+      _projectIdChanged(newVal, oldVal) {
+        // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
           this.$.getCollections.generateRequest();
+        }
+      }
+
+      _projectIdSelected(e) {
+        for (var d in this.projects) {
+          if (this.projects[d].name == e.target.value) {
+            this.projectId = this.projects[d].project_id;
+            break;
+          }
+        }
+      }
+
+      _collectionIdSelected(e) {
+        for (var d in this.collectionsObj) {
+          if (this.collectionsObj[d].name == e.target.value) {
+            this.collectionId = this.collectionsObj[d].collection_id;
+            break
+          }
         }
       }
 
@@ -399,43 +449,51 @@
         const projects = {};
         data.forEach((it) => projects[it.project_id] = it);
         this.setProperties({
-          projects,
-          projectId: data[0].project_id,
+          projects: projects,
         });
-        console.log('projectId', data[0].project_id);
 
-        this.$.modal.open();
-        this.$.modal.refit();
+        this.collection_id = "";
+
+        if (!this.projectId) {
+          this.set("projectId", data[0].project_id);
+        }
       }
 
       handleGetCollections(e) {
-        // var self = this;
+        var self = this;
         const data = e.detail.response;
-        // console.log('collecions2', data);
 
-        const collections = [];
+        const collections = data;
         const collectionsObj = {};
+
+        if (!self.collectionsObj) {
+          self.collectionsObj = {};
+        }
+
         data.forEach(function (it) {
-          collectionsObj[it.collection_id] = it.collection_id;
+          collectionsObj[it.collection_id] = it;
+          self.collectionsObj[it.collection_id] = it;
         });
 
-        console.log('data[0].collection_id', data[0].collection_id, data);
+        // console.log('data[0].collection_id', data[0].collection_id, data);
 
-        this.setProperties({
-          collectionsObj,
-          // collectionId: data[0].collection_id
+        var self = this;
+
+        self.setProperties({
+          collectionsObj: collectionsObj,
         });
-        // this.set("collectionsObj", collectionsObj)
-        // this.set("collectionId", 'roadmap::roadmap');
-        // if (data[0]) {
-          this.set("collectionId", data[0].collection_id);
-        // }
+
+        if (self.initialLaunch > 1 || !self.collectionId) {
+          self.collectionId = undefined;
+          setTimeout(() => { self.collectionId = Object.keys(collectionsObj)[0]; }, 0);
+        }
       }
 
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
-        this._updateMeasurmentView();
+        this._updateMeasurementView();
+        this.initialLaunch++;
       }
 
       _precookMeasurements(measurements) {
@@ -480,7 +538,7 @@
           this.filters[k] = [];
         }
         this.set("filters", this.filters);
-        this._updateMeasurmentView();
+        this._updateMeasurementView();
 
         this.$.modal.refit();
       }
@@ -494,7 +552,7 @@
       }
 
       _getProjectValue(item) {
-        return this.projects[item].project_id ? this.projects[item].project_id : item;
+        return this.projects[item].project_id ? this.projects[item].name : item;
       }
 
       _getCollectionKeys(collectionsObj) {
@@ -502,48 +560,51 @@
       }
 
       _getCollectionValue(item) {
-        return this.collectionsObj[item] ? this.collectionsObj[item] : item;
+        return this.collectionsObj[item] ? this.collectionsObj[item].name : item;
       }
 
-      _updateMeasurmentView() {
+      _updateMeasurementView() {
         let data = [];
         this.selection = {};
+        
         this.selection.chartType = this.selectedChart;
         this.measurements = this.measurementsRaw;
-      if (this.selection.chartType) {
-        if (this.selection.chartType == "GenesTrack") {
-          data = this.measurements.filter(m => m.defaultChartType == "Genes Track");
-        }
-        else if (this.selection.chartType.indexOf("Blocks") != -1) {
-          data = this.measurements.filter(m => m.type == "range");
-        }
-        else if (this.selection.chartType.indexOf("Plot") != -1) {
-          data = this.measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
-        }
-        else if (this.selection.chartType.indexOf("Gwas") != -1) {
-          data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
-        }
-        else if (this.selection.chartType.indexOf("Transcript") != -1) {
-          data = this.measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
-        }
-        else if (this.selection.chartType.indexOf("Interaction") != -1) {
-          data = this.measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
 
-          if (this.collectionId && this.collectionId != "") {
-            data = data.filter(m => m["annotation"]["collection"] == this.collectionId );
+        if (this.selection.chartType) {
+          if (this.selection.chartType == "GenesTrack") {
+            data = this.measurements.filter(m => m.defaultChartType == "Genes Track");
+          }
+          else if (this.selection.chartType.indexOf("Blocks") != -1) {
+            data = this.measurements.filter(m => m.type == "range");
+          }
+          else if (this.selection.chartType.indexOf("Plot") != -1) {
+            data = this.measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
+          }
+          else if (this.selection.chartType.indexOf("Gwas") != -1) {
+            data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
+          }
+          else if (this.selection.chartType.indexOf("Transcript") != -1) {
+            data = this.measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
+          }
+          else if (this.selection.chartType.indexOf("Interaction") != -1) {
+            data = this.measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
+
+            // if (this.collectionId && this.collectionId != "") {
+            //   data = data.filter(m => m["annotation"]["collection"] == this.collectionId );
+            // }]]]
+          }
+          else {
+            data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
           }
         }
-        else {
-          data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
-        }
-      }
-        const nData = this._clearingMeasurementsData(data, this.genome);
+
+        const nData = this._clearMeasurementsData(data, this.genome);
 
         this.set("_jsonMeasurements", nData);
         this.$.modal.refit();
       }
 
-      _clearingMeasurementsData(measurements, genome) {
+      _clearMeasurementsData(measurements, genome) {
         const clearedMeasurements = [];
         const mData = JSON.parse(JSON.stringify(measurements));
         mData.forEach(function (d, i) {
@@ -572,7 +633,6 @@
         return clearedMeasurements;
       }
 
-
       /**
        * Get Available Chart Types
        */
@@ -584,7 +644,8 @@
       }
 
       _isEnvironment(chartTypes) {
-        return false;//chartTypes.indexOf("EpivizNavigation") !== -1;
+        return false;
+        //chartTypes.indexOf("EpivizNavigation") !== -1;
       }
 
       _tableDataExists(tableData) {
@@ -678,6 +739,31 @@
 
       _showModal(event) {
         this.$.getProjects.generateRequest();
+
+        this.$.modal.open();
+        this.$.modal.refit();
+      }
+
+      openProject(project) {
+        this.$.getProjects.generateRequest();
+
+        this.set("projectId", project);
+
+        this.$.modal.open();
+        this.$.modal.refit();
+      }
+
+      openCollection(collection) {
+
+        var project = collection.split("::");
+
+        this.$.getProjects.generateRequest();
+
+        this.set("projectId", project[0]);
+        this.set("collectionId", collection);
+
+        this.$.modal.open();
+        this.$.modal.refit();
       }
 
       _close() {
@@ -708,7 +794,6 @@
           fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
           fmeasurements = fmeasurements.raw();
         }
-
 
         this.selection = {};
         this.selection.chartType = this.selectedChart;
