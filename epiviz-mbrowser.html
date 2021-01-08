@@ -124,6 +124,15 @@
         position: relative;
         top: 8px;
       }
+
+      /* paper-listbox {
+        height: min(auto, 500px);
+      } */
+
+      paper-listbox > paper-item:not(:last-child) {
+        border-bottom: 1px solid gray;
+        width: 250px;
+      }
     </style>
     <!-- local DOM goes here -->
 
@@ -166,8 +175,8 @@
     <paper-dialog id="modal" modal>
       <div class="header">
         <div>
-          <div class="title">Choose project</div>
-          <paper-dropdown-menu id="collectionProject" label="project" no-animations no-label-float>
+          <!-- <div class="title">Choose project</div> -->
+          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionProject" label="Choose Project" no-animations>
             <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{projectId}}" attr-for-selected="value">
               <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
                 <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
@@ -176,8 +185,8 @@
           </paper-dropdown-menu>
         </div>
         <div>
-          <div class="title">Choose collection</div>
-          <paper-dropdown-menu id="collectionElement" label="collection" no-animations no-label-float>
+          <!-- <div class="title">Choose collection</div> -->
+          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionElement" label="Choose Collection" no-animations>
             <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{collectionId}}" attr-for-selected="value">
               <template id="collRepeater" is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
                 <paper-item value$="[[item]]">[[_getCollectionValue(item)]]</paper-item>
@@ -186,8 +195,8 @@
           </paper-dropdown-menu>
         </div>
         <div>
-          <div class="title">Select chart type</div>
-          <paper-dropdown label="chart" value="{{selectedChart}}" no-animations no-label-float>
+          <!-- <div class="title">Select chart type</div> -->
+          <paper-dropdown always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" value="{{selectedChart}}" no-animations>
             <template is="dom-repeat" items="{{_charts}}">
               <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
             </template>
@@ -502,9 +511,28 @@
 
       handleGetMeasurements(e) {
         const data = e.detail.response;
+        this.chooseChartType(data);
         this.measurementsHandling(data);
         this._updateMeasurementView();
         this.initialLaunch++;
+      }
+
+      chooseChartType(data) {
+        var m = data[0];
+
+        if (m.file_type == "gwas") {
+          this.selectedChart = "GwasTrack";
+        } else if (m.file_type == "tiledb") {
+          this.selectedChart = "HeatmapPlot";
+        } else if (m.file_type == "transcript") {
+          this.selectedChart = "TranscriptTrack";
+        } else if (m.file_type == "interaction_bigbed") {
+          this.selectedChart = "InteractionTrack";
+        } else if (m.file_type == "bigbed") {
+          this.selectedChart = "StackedBlocksTrack"
+        } else {
+          this.selectedChart = "MultiStackedLineTrack";
+        }
       }
 
       _precookMeasurements(measurements) {
