@@ -329,10 +329,15 @@
             }
           },
 
+          relevantCharts: {
+            type: Array,
+            notify: true
+          },
+
           _charts: {
             type: Array,
             notify: true,
-            computed: "_getCharts(_chartTypes, _parentContainer)"
+            computed: "_getCharts(_chartTypes, _parentContainer, relevantCharts)"
           },
 
           /**
@@ -490,8 +495,6 @@
           self.collectionsObj[it.collection_id] = it;
         });
 
-        // console.log('data[0].collection_id', data[0].collection_id, data);
-
         var self = this;
 
         self.setProperties({
@@ -511,28 +514,15 @@
 
       handleGetMeasurements(e) {
         const data = e.detail.response;
-        this.chooseChartType(data);
         this.measurementsHandling(data);
+        this.chooseChartType(data);
         this._updateMeasurementView();
         this.initialLaunch++;
       }
 
       chooseChartType(data) {
-        var m = data[0];
-
-        if (m.file_type == "gwas") {
-          this.selectedChart = "GwasTrack";
-        } else if (m.file_type == "tiledb") {
-          this.selectedChart = "HeatmapPlot";
-        } else if (m.file_type == "transcript") {
-          this.selectedChart = "TranscriptTrack";
-        } else if (m.file_type == "interaction_bigbed") {
-          this.selectedChart = "InteractionTrack";
-        } else if (m.file_type == "bigbed") {
-          this.selectedChart = "StackedBlocksTrack"
-        } else {
-          this.selectedChart = "MultiStackedLineTrack";
-        }
+        this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
+        this.selectedChart = this.relevantCharts && this.relevantCharts[0];
       }
 
       _precookMeasurements(measurements) {
@@ -602,6 +592,44 @@
         return this.collectionsObj[item] ? this.collectionsObj[item].name : item;
       }
 
+      _relevantCharts(measurements) {
+        const relevantCharts = Object.keys(this._chartTypes).filter((chart) => {
+          return this._filterMeasurements(chart, measurements).length > 0;
+        })
+        
+        return relevantCharts;
+      }
+
+      _filterMeasurements(chartType, measurements) {
+        let filteredMeasurements;
+
+        if (chartType) {
+          if (chartType == "GenesTrack") {
+            filteredMeasurements = measurements.filter(m => m.defaultChartType == "Genes Track");
+          }
+          else if (chartType.indexOf("Blocks") != -1) {
+            filteredMeasurements = measurements.filter(m => m.type == "range");
+          }
+          else if (chartType.indexOf("Plot") != -1) {
+            filteredMeasurements = measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
+          }
+          else if (chartType.indexOf("Gwas") != -1) {
+            filteredMeasurements = measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
+          }
+          else if (chartType.indexOf("Transcript") != -1) {
+            filteredMeasurements = measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
+          }
+          else if (chartType.indexOf("Interaction") != -1) {
+            filteredMeasurements = measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
+          }
+          else {
+            filteredMeasurements = measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
+          }
+          return filteredMeasurements;
+        }
+        return [];
+      }
+
       _updateMeasurementView() {
         let data = [];
         this.selection = {};
@@ -609,34 +637,7 @@
         this.selection.chartType = this.selectedChart;
         this.measurements = this.measurementsRaw;
 
-        if (this.selection.chartType) {
-          if (this.selection.chartType == "GenesTrack") {
-            data = this.measurements.filter(m => m.defaultChartType == "Genes Track");
-          }
-          else if (this.selection.chartType.indexOf("Blocks") != -1) {
-            data = this.measurements.filter(m => m.type == "range");
-          }
-          else if (this.selection.chartType.indexOf("Plot") != -1) {
-            data = this.measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
-          }
-          else if (this.selection.chartType.indexOf("Gwas") != -1) {
-            data = this.measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
-          }
-          else if (this.selection.chartType.indexOf("Transcript") != -1) {
-            data = this.measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
-          }
-          else if (this.selection.chartType.indexOf("Interaction") != -1) {
-            data = this.measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
-
-            // if (this.collectionId && this.collectionId != "") {
-            //   data = data.filter(m => m["annotation"]["collection"] == this.collectionId );
-            // }]]]
-          }
-          else {
-            data = this.measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
-          }
-        }
-
+        data = this._filterMeasurements(this.selection.chartType, this.measurements);
         const nData = this._clearMeasurementsData(data, this.genome);
 
         this.set("_jsonMeasurements", nData);
@@ -675,9 +676,17 @@
       /**
        * Get Available Chart Types
        */
-      _getCharts(chartTypes, parentContainer) {
+      _getCharts(chartTypes, parentContainer, relevantCharts) {
         if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
           delete chartTypes["EpivizNavigation"];
+        }
+        if (relevantCharts) {
+          const relevantChartObj = this._relevantCharts(this.measurementsRaw).reduce((obj, it) => {
+            obj[it] = null;
+            return obj;
+          }, {})
+
+          return Object.keys(relevantChartObj);
         }
         return Object.keys(chartTypes);
       }
