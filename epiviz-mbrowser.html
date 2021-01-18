@@ -523,7 +523,9 @@
       }
 
       chooseChartType(data) {
-        this.selectedChart = this.relevantCharts && this.relevantCharts[0];
+        if (this.relevantCharts && this.relevantCharts[0]) {
+          this.selectedChart = this.relevantCharts[0];
+        }
       }
 
       _precookMeasurements(measurements) {
@@ -594,11 +596,43 @@
       }
 
       _relevantCharts(measurements) {
-        const relevantCharts = Object.keys(this._chartTypes).filter((chart) => {
-          return this._filterMeasurements(chart, measurements).length > 0;
-        })
-        
-        return relevantCharts;
+        return this._getRelevantCharts(Object.keys(this._chartTypes), measurements);
+      }
+
+      _getRelevantCharts(charts, measurements) {
+        return Object.keys(measurements.reduce((acc,measurement) => {
+          let isRelevant = [];
+          charts.forEach((chartType) => {
+            isRelevant = false;
+            if (chartType) {
+              if (chartType == "GenesTrack") {
+                isRelevant = measurement.defaultChartType == "Genes Track";
+              }
+              else if (chartType.indexOf("Blocks") != -1) {
+                isRelevant = measurement.type == "range";
+              }
+              else if (chartType.indexOf("Plot") != -1) {
+                isRelevant = ["tiledb", "tabix"].includes(measurement.annotation["_filetype"]);
+              }
+              else if (chartType.indexOf("Gwas") != -1) {
+                isRelevant = ["gwas"].includes(measurement.annotation["_filetype"]);
+              }
+              else if (chartType.indexOf("Transcript") != -1) {
+                isRelevant = ["transcript"].includes(measurement.annotation["_filetype"]);
+              }
+              else if (chartType.indexOf("Interaction") != -1) {
+                isRelevant = ["interaction_bigbed"].includes(measurement.annotation["_filetype"]);
+              }
+              else {
+                isRelevant = ["bigwig"].includes(measurement.annotation["_filetype"]);
+              }
+            }
+            if (isRelevant) {
+              acc[chartType] = null;
+            }
+          })
+          return acc;
+        }, {}));
       }
 
       _filterMeasurements(chartType, measurements) {
@@ -682,12 +716,7 @@
           delete chartTypes["EpivizNavigation"];
         }
         if (relevantCharts) {
-          const relevantChartObj = this.relevantCharts.reduce((obj, it) => {
-            obj[it] = null;
-            return obj;
-          }, {})
-
-          return Object.keys(relevantChartObj);
+          return relevantCharts;
         }
         return Object.keys(chartTypes);
       }
