@@ -681,7 +681,7 @@
           delete chartTypes["EpivizNavigation"];
         }
         if (relevantCharts) {
-          const relevantChartObj = this._relevantCharts(this.measurementsRaw).reduce((obj, it) => {
+          const relevantChartObj = this.relevantCharts.reduce((obj, it) => {
             obj[it] = null;
             return obj;
           }, {})
