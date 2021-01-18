@@ -515,13 +515,13 @@
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
+        this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         this.chooseChartType(data);
         this._updateMeasurementView();
         this.initialLaunch++;
       }
 
       chooseChartType(data) {
-        this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         this.selectedChart = this.relevantCharts && this.relevantCharts[0];
       }
 
