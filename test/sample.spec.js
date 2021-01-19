@@ -101,7 +101,7 @@ describe('mbrowser test', async () => {
         chai.assert.equalIgnoreCase('LHX2 enhancers', measuremnt_data.first_measurement_text);
         chai.assert.equalIgnoreCase('Microglia epigenetic data from Nott et al.', measuremnt_data.project_name);
         chai.assert.equalIgnoreCase('Microglia epigenetic data from Nott et al.', measuremnt_data.collection_name);
-        chai.assert.equalIgnoreCase('StackedBlocksTrack', measuremnt_data.chart_type);
+        chai.assert.equalIgnoreCase('BlocksTrack', measuremnt_data.chart_type);
     })
     it('initialize m-browser with project and collection, we expect the chart type to be automatically selected based on the measurements', async () => {
         await page.waitForSelector('shadowDom/epiviz-measurement-browser|paper-button');
@@ -134,7 +134,7 @@ describe('mbrowser test', async () => {
         chai.assert.equalIgnoreCase('LHX2 enhancers', measuremnt_data.first_measurement_text, 'measurement');
         chai.assert.equalIgnoreCase('Microglia epigenetic data from Nott et al.', measuremnt_data.project_name, 'project');
         chai.assert.equalIgnoreCase('Microglia epigenetic data from Nott et al.', measuremnt_data.collection_name, 'collection');
-        chai.assert.equalIgnoreCase('StackedBlocksTrack', measuremnt_data.chart_type, 'chart type');
+        chai.assert.equalIgnoreCase('BlocksTrack', measuremnt_data.chart_type, 'chart type');
         }
 
         await page.waitForSelector('shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input');
@@ -161,7 +161,7 @@ describe('mbrowser test', async () => {
         assert.strictEqual(measuremnt_data.amount > 1, true);
         chai.assert.equalIgnoreCase('Brain tracks from epigenome roadmap', measuremnt_data.project_name, 'project after');
         chai.assert.equalIgnoreCase('Brain tracks from epigenome roadmap', measuremnt_data.collection_name, 'collection after');
-        chai.assert.equalIgnoreCase('MultiStackedLineTrack', measuremnt_data.chart_type, 'chart type after');
+        chai.assert.equalIgnoreCase('LineTrack', measuremnt_data.chart_type, 'chart type after');
         chai.assert.equalIgnoreCase('Neurosphere_Cultured_Cells_Cortex_Derived H3K4me3', measuremnt_data.first_measurement_text, 'measurement after');
     });
     // it('test blank', async () => {
