@@ -197,11 +197,13 @@
         </div>
         <div>
           <!-- <div class="title">Select chart type</div> -->
-          <paper-dropdown always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" value="{{selectedChart}}" no-animations>
-            <template is="dom-repeat" items="{{_charts}}">
-              <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
-            </template>
-          </paper-dropdown>
+          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" no-animations>
+            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{selectedChart}}" attr-for-selected="value">
+              <template is="dom-repeat" items="[[_charts]]">
+                <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
+              </template>
+            </paper-listbox>
+          </paper-dropdown-menu>
           <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
             <paper-tab>All datasets </paper-tab>
           </paper-tabs>
@@ -528,6 +530,29 @@
         }
       }
 
+      _getChartTypes(data) {
+        
+        var relCharts = {};
+
+        data.forEach(function(m) {
+          if (m.annotation._filetype == "gwas") {
+            relCharts["GwasTrack"] = true;
+          } else if (m.annotation._filetype == "tiledb") {
+            relCharts["HeatmapPlot"] = true;
+          } else if (m.annotation._filetype == "transcript") {
+            relCharts["TranscriptTrack"] = true;
+          } else if (m.annotation._filetype == "interaction_bigbed") {
+            relCharts["InteractionTrack"] = true;
+          } else if (m.annotation._filetype == "bigbed") {
+            relCharts["StackedBlocksTrack"] = true;
+          } else {
+            relCharts["MultiStackedLineTrack"] = true;
+          }
+        });
+
+        return Object.keys(relCharts);
+      }
+
       _precookMeasurements(measurements) {
         const pdata = []
         measurements.forEach(function (m) {
@@ -596,7 +621,8 @@
       }
 
       _relevantCharts(measurements) {
-        return this._getRelevantCharts(Object.keys(this._chartTypes), measurements);
+        // return this._getRelevantCharts(Object.keys(this._chartTypes), measurements);
+        return this._getChartTypes(measurements);
       }
 
       _getRelevantCharts(charts, measurements) {
