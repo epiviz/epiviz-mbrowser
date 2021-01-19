@@ -21,7 +21,8 @@
     "paper-dropdown": "pushkar8723/paper-dropdown#^2.0.2",
     "jquery": "^3.5.1",
     "jquery-ui": "^1.12.1",
-    "paper-card": "PolymerElements/paper-card#^2.0.0"
+    "paper-card": "PolymerElements/paper-card#^2.0.0",
+    "paper-spinner": "^2.x.x"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
