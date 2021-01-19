@@ -74,12 +74,16 @@
         margin: 0px 15px 0px 15px;
       }
 
-      .spinner-overlay {
+      paper-dialog :host{
+        overflow: hidden;
+      }
+      :host .spinner-overlay {
         position: absolute;
         outline: solid 2px;
-        width: 100vw;
-        height: 100vh;
-        z-index: 10000000;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
         top: 0;
         left: 0;
         background-color: #00000040;
@@ -87,6 +91,9 @@
         display: flex;
         justify-content: center;
         align-items: center;
+      }
+      paper-spinner {
+        transform: scale(3.5);
       }
 
       .header {
@@ -96,6 +103,7 @@
       }
 
       #modal {
+        overflow: hidden;
         position: fixed;
         top: 0;
         left: 0;
@@ -168,11 +176,6 @@
       url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
 
-    <template is="dom-if" if="[[loading]]">
-      <div class="spinner-overlay">
-        <paper-spinner active=[[loading]]></paper-spinner>
-      </div>
-    </template>
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
         <paper-button raised on-tap="_showModal">
@@ -251,6 +254,11 @@
           disabled="{{!_enableButton(selectedChart, selectedMeasurements.*, selectedExistingMeasurements.*, tabSelected.*)}}"
           dialog-confirm autofocus>Add Chart</paper-button>
       </div>
+      <template is="dom-if" if="[[loading]]">
+        <div class="spinner-overlay">
+          <paper-spinner active=[[loading]]></paper-spinner>
+        </div>
+      </template>
     </paper-dialog>
   </template>
 
