@@ -520,7 +520,10 @@
           self.collectionsObj = {};
         }
 
-        data.forEach(function (it) {
+        data.forEach((it) => {
+          if(!this.projects[this.projectId].genomes.some(genome => it.genomes.includes(genome))) {
+            return ;//skip;
+          }
           collectionsObj[it.collection_id] = it;
           self.collectionsObj[it.collection_id] = it;
         });
