@@ -497,7 +497,12 @@
         const data = e.detail.response;
 
         const projects = {};
-        data.forEach((it) => projects[it.project_id] = it);
+        data.forEach((it) => {
+          if(!it.genomes.includes(this.genome)) {
+            return ;//skip;
+          }
+          projects[it.project_id] = it;
+        });
         this.setProperties({
           projects: projects,
         });
