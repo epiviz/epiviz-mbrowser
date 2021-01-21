@@ -19,7 +19,7 @@ if (false) {
 before(async () => {
   global.expect = expect;
   global.browser = await puppeteer.launch(opts);
-  polyserve = await startServer({port:8081});
+  polyserve = await startServer();
 
   global.baseUrl = 'http://127.0.0.1:8081/components/epiviz-mbrowser/demo/index2.html';
   puppeteer.registerCustomQueryHandler('shadowDom', shadowDomSelector);
