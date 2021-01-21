@@ -526,7 +526,7 @@
         }
 
         data.forEach((it) => {
-          if(!this.projects[this.projectId].genomes.some(genome => it.genomes.includes(genome))) {
+          if(!it.genomes.includes(this.genome)) {
             return ;//skip;
           }
           collectionsObj[it.collection_id] = it;
