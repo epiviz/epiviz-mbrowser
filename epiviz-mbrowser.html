@@ -507,7 +507,7 @@
         this.collection_id = "";
 
         if (!this.projectId) {
-          this.set("projectId", data[0].project_id);
+          this.set("projectId", Object.keys(projects)[0]);
         }
       }
 
