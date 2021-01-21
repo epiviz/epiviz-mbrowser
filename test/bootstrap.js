@@ -1,12 +1,8 @@
 const puppeteer = require('puppeteer');
 const { expect } = require('chai');
-// const opn = require('opn');
-// const cmd = require('node-cmd');
 const { shadowDomSelector } = require('./test-helper.js');
-
-// const _ = require('lodash');
-
-// const globalVariables = _.pick(global, ['browser', 'expect', 'baseUrl']);
+const {startServer} = require('polyserve');
+const path = require('path');
 
 let opts = {};
 
@@ -23,14 +19,16 @@ if (false) {
 before(async () => {
   global.expect = expect;
   global.browser = await puppeteer.launch(opts);
+  polyserve = await startServer();
+
   global.baseUrl = 'http://127.0.0.1:8081/components/epiviz-mbrowser/demo/index2.html';
   puppeteer.registerCustomQueryHandler('shadowDom', shadowDomSelector);
-
 });
 
 
-after(() => {
+after((done) => {
   browser.close();
+  polyserve.close(done);
   // setTimeout(() => { cmd.run('node server.js'); }, 5000)
   // setTimeout(() => {opn('http://localhost:9978');}, 2000);
   // open('./mochawesome-report/mochawesome.html');
