@@ -21,9 +21,9 @@ before(async () => {
   global.browser = await puppeteer.launch({
     args: ['--disable-web-security']
   });
-  polyserve = await startServer({port:8081});
+  polyserve = await startServer({port:4444});
 
-  global.baseUrl = 'http://127.0.0.1:8081/components/epiviz-mbrowser/demo/index2.html';
+  global.baseUrl = 'http://127.0.0.1:4444/components/epiviz-mbrowser/demo/index2.html';
   puppeteer.registerCustomQueryHandler('shadowDom', shadowDomSelector);
 });
 
