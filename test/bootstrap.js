@@ -18,7 +18,9 @@ if (false) {
 
 before(async () => {
   global.expect = expect;
-  global.browser = await puppeteer.launch(opts);
+  global.browser = await puppeteer.launch({
+    args: ['--disable-web-security']
+  });
   polyserve = await startServer({port:8081});
 
   global.baseUrl = 'http://127.0.0.1:8081/components/epiviz-mbrowser/demo/index2.html';
