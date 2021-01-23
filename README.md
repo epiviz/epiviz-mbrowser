@@ -1,4 +1,5 @@
-# \<epiviz-mbrowser\>
+# epiviz-mbrowser
+![Node.js CI](https://github.com/epiviz/epiviz-mbrowser/workflows/Node.js%20CI/badge.svg)
 
 
 
