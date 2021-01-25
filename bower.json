@@ -16,7 +16,7 @@
     "paper-item": "PolymerElements/paper-item#^2.0.0",
     "paper-styles": "PolymerElements/paper-styles#^2.0.0",
     "iron-icons": "PolymerElements/iron-icons#^2.1.1",
-    "data-filter": "epiviz/data-filter",
+    "data-filter": "https://github.com/jkanche/data-filter.git#master",
     "paper-tabs": "PolymerElements/paper-tabs#^2.1.1",
     "paper-dropdown": "pushkar8723/paper-dropdown#^2.0.2",
     "jquery": "^3.5.1",
@@ -39,5 +39,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "resolutions": {
+    "lodash": "^4.0.0"
+  }
 }

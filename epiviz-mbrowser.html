@@ -588,9 +588,9 @@
       _precookMeasurements(measurements) {
         const pdata = []
         measurements.forEach(function (m) {
-          var ptype = "range";
-          if (["bp"].includes(m.datatype)) {
-            ptype = "feature";
+          var ptype = "feature";
+          if (["annotation"].includes(m.datatype)) {
+            ptype = "range";
           }
 
           var tmea = {
@@ -603,7 +603,9 @@
             "formula": null,
             "defaultChartType": "track",
             "annotation": m.annotation,
-            "metadata": m.metadata
+            "metadata": m.metadata,
+            "minValue": 0,
+            "maxValue": 5
           }
 
           tmea.annotation.collection = m.collection_id;
@@ -945,8 +947,9 @@
           fmeasurements = this.currentChartObj[fids[0]];
         } else if (this.tabSelected === 0) {
           fids = this.selectedMeasurements.map(x => x.id);
-          fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
-          fmeasurements = fmeasurements.raw();
+          fmeasurements = this.measurementsRaw.filter((m) => {return fids.includes(m.id)});
+          // fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
+          // fmeasurements = fmeasurements.raw();
         }
 
         this.selection = {};
