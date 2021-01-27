@@ -156,7 +156,6 @@
       }
     </style>
     <!-- local DOM goes here -->
-
     <iron-ajax id="getProjects" method="GET" 
       url="[[msApi]]projects/"
       handle-as="json" on-response="handleGetProjects" debounce-duration="300">
@@ -195,6 +194,22 @@
       </paper-menu-button>
     </template>
     <paper-dialog id="modal" modal>
+      <!-- show error message -->
+      <template is="dom-if" if="[[isError(error)]]">
+        <p>
+          Please close this popup and login from the top right corner of this app.<br />
+          If you continue to see this message, please
+        
+        <a href="https://sites.google.com/gene.com/genomicsplatform/gepiviz/telling-gepiviz-about-your-data" target="_blank">
+          check the documentation</a>
+        on how to add this project to your list.
+        </p>
+        <div class="buttons">
+          <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
+        </div>
+      </template>
+      <template is="dom-if" if="[[showContent(error)]]">
+      
       <div class="header">
         <div>
           <!-- <div class="title">Choose project</div> -->
@@ -254,6 +269,7 @@
       <template is="dom-if" if="[[loading]]">
           <paper-spinner-lite class="spinner-overlay" active=[[loading]]></paper-spinner-lite>
       </template>
+    </template>
     </paper-dialog>
   </template>
 
@@ -281,6 +297,11 @@
             type: String,
             notify: true,
             value: "hg38"
+          },
+
+          error: {
+            type: String,
+            value: ""
           },
 
           /**
@@ -454,8 +475,23 @@
         super.ready();
       }
 
+      isError(error) {
+        return !!error
+      }
+      showContent(error) {
+        return !error
+      }
+
+      _setErrorHandler(request) {
+        request.completes.then(() => {}, 
+        (rejected) => {
+          this.set('error', "ajax-error")
+        })
+      }
+
       _fetchMeasurements() {
-        this.$.getMeasurements.generateRequest();
+        const request = this.$.getMeasurements.generateRequest();
+        this._setErrorHandler(request);
       }
 
       _collectionIdChanged(newVal, oldVal) {
@@ -468,7 +504,8 @@
       _projectIdChanged(newVal, oldVal) {
         // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
-          this.$.getCollections.generateRequest();
+          const request = this.$.getCollections.generateRequest();
+          this._setErrorHandler(request);
         }
       }
 
@@ -492,7 +529,6 @@
 
       handleGetProjects(e) {
         const data = e.detail.response;
-
         const projects = {};
         data.forEach((it) => {
           if(!it.genomes.includes(this.genome)) {
@@ -505,9 +541,13 @@
         });
 
         this.collection_id = "";
-
         if (!this.projectId) {
           this.set("projectId", Object.keys(projects)[0]);
+        }
+        if (!projects[this.projectId]) {
+          this.set("error", "some_error")
+        } else {
+          this.set("error", "")
         }
       }
 
@@ -887,7 +927,8 @@
       _showModal(event) {
         this.autoOpen = false;
 
-        this.$.getProjects.generateRequest();
+        const request = this.$.getProjects.generateRequest();
+        this._setErrorHandler(request);
 
         this.$.modal.open();
         this.$.modal.refit();
@@ -896,13 +937,12 @@
             this.shadowRoot.querySelector("#cardElem")._selected = {};
             this.shadowRoot.querySelector("#cardElem").filters = this.filters;
         }
-
       }
 
       openProject(project) {
         this.autoOpen = true;
-        this.$.getProjects.generateRequest();
-
+        const request = this.$.getProjects.generateRequest();
+        this._setErrorHandler(request);
         this.set("projectId", project);
 
         this.$.modal.open();
@@ -919,7 +959,8 @@
 
         var project = collection.split("::");
 
-        this.$.getProjects.generateRequest();
+        const request = this.$.getProjects.generateRequest();
+        this._setErrorHandler(request);
 
         this.set("projectId", project[0]);
         this.set("collectionId", collection);
