@@ -158,17 +158,20 @@
     <!-- local DOM goes here -->
     <iron-ajax id="getProjects" method="GET" 
       url="[[msApi]]projects/"
+      on-error="_errorHandler"
       handle-as="json" on-response="handleGetProjects" debounce-duration="300">
     </iron-ajax>
 
     <iron-ajax id="getCollections" method="GET"
       loading={{loading}}
+      on-error="_errorHandler"
       url="[[msApi]]projects/[[projectId]]/collections" handle-as="json"
       on-response="handleGetCollections" debounce-duration="300"></iron-ajax>
     </iron-ajax>
 
     <iron-ajax id="getMeasurements" method="GET"
       loading={{loading}}
+      on-error="_errorHandler"
       url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
 
@@ -482,16 +485,12 @@
         return !error
       }
 
-      _setErrorHandler(request) {
-        request.completes.then(() => {}, 
-        (rejected) => {
-          this.set('error', "ajax-error")
-        })
+      _errorHandler(error) {
+        this.set('error', "ajax-error")
       }
 
       _fetchMeasurements() {
         const request = this.$.getMeasurements.generateRequest();
-        this._setErrorHandler(request);
       }
 
       _collectionIdChanged(newVal, oldVal) {
@@ -505,7 +504,6 @@
         // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
           const request = this.$.getCollections.generateRequest();
-          this._setErrorHandler(request);
         }
       }
 
@@ -928,7 +926,6 @@
         this.autoOpen = false;
 
         const request = this.$.getProjects.generateRequest();
-        this._setErrorHandler(request);
 
         this.$.modal.open();
         this.$.modal.refit();
@@ -942,7 +939,6 @@
       openProject(project) {
         this.autoOpen = true;
         const request = this.$.getProjects.generateRequest();
-        this._setErrorHandler(request);
         this.set("projectId", project);
 
         this.$.modal.open();
@@ -960,7 +956,6 @@
         var project = collection.split("::");
 
         const request = this.$.getProjects.generateRequest();
-        this._setErrorHandler(request);
 
         this.set("projectId", project[0]);
         this.set("collectionId", collection);
