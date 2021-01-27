@@ -198,7 +198,7 @@
     </template>
     <paper-dialog id="modal" modal>
       <!-- show error message -->
-      <template is="dom-if" if="[[isError(error)]]">
+      <template is="dom-if" if="[[error]]">
         <p>
           Please close this popup and login from the top right corner of this app.<br />
           If you continue to see this message, please
@@ -211,7 +211,7 @@
           <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
         </div>
       </template>
-      <template is="dom-if" if="[[showContent(error)]]">
+      <template is="dom-if" if="[[!error]]">
       
       <div class="header">
         <div>
@@ -303,8 +303,8 @@
           },
 
           error: {
-            type: String,
-            value: ""
+            type: Boolean,
+            value: false
           },
 
           /**
@@ -478,19 +478,12 @@
         super.ready();
       }
 
-      isError(error) {
-        return !!error
-      }
-      showContent(error) {
-        return !error
-      }
-
       _errorHandler(error) {
-        this.set('error', "ajax-error")
+        this.set('error', true)
       }
 
       _fetchMeasurements() {
-        const request = this.$.getMeasurements.generateRequest();
+        this.$.getMeasurements.generateRequest();
       }
 
       _collectionIdChanged(newVal, oldVal) {
@@ -503,7 +496,7 @@
       _projectIdChanged(newVal, oldVal) {
         // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
-          const request = this.$.getCollections.generateRequest();
+          this.$.getCollections.generateRequest();
         }
       }
 
@@ -543,9 +536,9 @@
           this.set("projectId", Object.keys(projects)[0]);
         }
         if (!projects[this.projectId]) {
-          this.set("error", "some_error")
+          this.set("error", true)
         } else {
-          this.set("error", "")
+          this.set("error", false)
         }
       }
 
@@ -916,7 +909,7 @@
       _showModal(event) {
         this.autoOpen = false;
 
-        const request = this.$.getProjects.generateRequest();
+        this.$.getProjects.generateRequest();
 
         this.$.modal.open();
         this.$.modal.refit();
@@ -929,7 +922,7 @@
 
       openProject(project) {
         this.autoOpen = true;
-        const request = this.$.getProjects.generateRequest();
+        this.$.getProjects.generateRequest();
         this.set("projectId", project);
 
         this.$.modal.open();
@@ -946,7 +939,7 @@
 
         var project = collection.split("::");
 
-        const request = this.$.getProjects.generateRequest();
+        this.$.getProjects.generateRequest();
 
         this.set("projectId", project[0]);
         this.set("collectionId", collection);
