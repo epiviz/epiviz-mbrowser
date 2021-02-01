@@ -205,7 +205,7 @@
         
         <a href="https://sites.google.com/gene.com/genomicsplatform/gepiviz/telling-gepiviz-about-your-data" target="_blank">
           check the documentation</a>
-        on how to add this project to your list.
+        on how to add this project to your list or <button on-click="_loadDefaulProjects">get available projects</button>
         </p>
         <div class="buttons">
           <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
@@ -913,6 +913,13 @@
           "currentCharts": currentCharts,
           "currChartCollections": currChartCollections
         }
+      }
+
+      _loadDefaulProjects(e) {
+        this.setProperties({
+          projectId: Object.keys(this.projects)[0],
+          error: false
+        });
       }
 
       _showModal(event) {
