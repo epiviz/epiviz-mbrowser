@@ -552,13 +552,22 @@
         this.measurementsHandling(data);
         this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         this.chooseChartType(data);
-        this._updateMeasurementView();
+        // this._updateMeasurementView();
         this.initialLaunch++;
       }
 
       chooseChartType(data) {
+        var self = this;
         if (this.relevantCharts && this.relevantCharts[0]) {
-          this.selectedChart = this.relevantCharts[0];
+          // this.selectedChart = this.relevantCharts[0];
+          self.set("selectedChart", undefined);
+          setTimeout(() => { 
+            // self.selectedChart = self.relevantCharts[0]; 
+            self.set("selectedChart", self.relevantCharts[0]);
+
+            self._refitModal();
+            self._updateMeasurementView();
+          }, 0);
         }
       }
 
