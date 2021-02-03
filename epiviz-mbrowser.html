@@ -163,6 +163,7 @@
     </style>
     <!-- local DOM goes here -->
     <iron-ajax id="getProjects" method="GET" 
+      loading={{loading}}
       url="[[msApi]]projects/"
       on-error="_errorHandler"
       handle-as="json" on-response="handleGetProjects" debounce-duration="300">
