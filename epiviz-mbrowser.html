@@ -180,7 +180,8 @@
       loading={{loading}}
       on-error="_errorHandler"
       url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
-      on-response="handleGetMeasurements" debounce-duration="300"></iron-ajax>
+      on-response="handleGetMeasurements" debounce-duration="300">
+    </iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
@@ -203,83 +204,89 @@
         </paper-listbox>
       </paper-menu-button>
     </template>
+
     <paper-dialog id="modal" modal>
-      <!-- show error message -->
       <template is="dom-if" if="[[error]]">
-        <p>
-          Please close this popup and login from the top right corner of this app.<br />
-          If you continue to see this message, please
-        
-        <a href="https://sites.google.com/gene.com/genomicsplatform/gepiviz/telling-gepiviz-about-your-data" target="_blank">
-          check the documentation</a>
-        on how to add this project to your list or <button on-click="_loadDefaulProjects">get available projects</button>
-        </p>
+        <p class="infoMessage">
+          Please close this popup and login from the top right corner of this app.
+          <br/>
+          If you continue to see this error, please  
+          <a href="https://sites.google.com/gene.com/genomicsplatform/gepiviz/telling-gepiviz-about-your-data"
+            target="_blank">
+            check the documentation</a> 
+          on how to add this dataset to your list.
+
+          
+          <br/>
+          Click here to show currently available datasets
+          <br/>
+          <paper-button on-tap="_loadDefaulProjects">show available datasets</paper-button>        </p>
         <div class="buttons">
           <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
         </div>
       </template>
       <template is="dom-if" if="[[!error]]">
       
-      <div class="header">
-        <div>
-          <!-- <div class="title">Choose project</div> -->
-          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionProject" label="Choose Project" no-animations>
-            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{projectId}}" attr-for-selected="value">
-              <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
-                <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
-              </template>
-            </paper-listbox>
-          </paper-dropdown-menu>
+        <div class="header">
+            <div>
+              <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionProject" label="Choose Project" no-animations>
+                <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{projectId}}" attr-for-selected="value">
+                  <template is="dom-repeat" items="[[_getProjectKeys(projects)]]">
+                    <paper-item value$="[[item]]">[[_getProjectValue(item)]]</paper-item>
+                  </template>
+                </paper-listbox>
+              </paper-dropdown-menu>
+            </div>
+            <div>
+              <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionElement" label="Choose Collection" no-animations>
+                <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{collectionId}}" attr-for-selected="value">
+                  <template id="collRepeater" is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
+                    <paper-item value$="[[item]]">[[_getCollectionValue(item)]]</paper-item>
+                  </template>
+                </paper-listbox>
+              </paper-dropdown-menu>
+            </div>
+            <div>
+              <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" no-animations>
+                <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{selectedChart}}" attr-for-selected="value">
+                  <template is="dom-repeat" items="[[_charts]]" mutable-data>
+                    <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
+                  </template>
+                </paper-listbox>
+              </paper-dropdown-menu>
+              <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
+                <paper-tab>All datasets </paper-tab>
+              </paper-tabs>
+            </div>
         </div>
-        <div>
-          <!-- <div class="title">Choose collection</div> -->
-          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" id="collectionElement" label="Choose Collection" no-animations>
-            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{collectionId}}" attr-for-selected="value">
-              <template id="collRepeater" is="dom-repeat" items="[[_getCollectionKeys(collectionsObj)]]">
-                <paper-item value$="[[item]]">[[_getCollectionValue(item)]]</paper-item>
-              </template>
-            </paper-listbox>
-          </paper-dropdown-menu>
-        </div>
-        <div>
-          <!-- <div class="title">Select chart type</div> -->
-          <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" no-animations>
-            <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{selectedChart}}" attr-for-selected="value">
-              <template is="dom-repeat" items="[[_charts]]">
-                <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
-              </template>
-            </paper-listbox>
-          </paper-dropdown-menu>
-          <paper-tabs style="display: none" selected="{{tabSelected}}" noink>
-            <paper-tab>All datasets </paper-tab>
-          </paper-tabs>
-        </div>
-      </div>
-      <div class="scrollable">
-        <iron-pages selected="{{tabSelected}}">
-          <div class="dialog-content">
-            <template is="dom-if" if="[[_tableDataExists(_jsonMeasurements)]]">
-              <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
-                selected-items="{{selectedMeasurements}}">
-              </data-filter>
-            </template>
-            <p class="infoMessage" hidden$="[[_tableDataExists(_jsonMeasurements)]]">
-              No measurements are available for the chart type and/or collection.
-              Choose a different collection or chart
-            </p>
+          <div class="scrollable">
+              <div class="dialog-content">
+                <template is="dom-if" if="[[_showTable(error, _jsonMeasurements)]]">
+                  <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
+                    selected-items="{{selectedMeasurements}}">
+                  </data-filter>
+                </template>
+                  <p class="infoMessage" hidden$="[[_tableDataExists(_jsonMeasurements)]]">
+                    No measurements are available for this project/collection/chart type.
+                    Choose a different project/collection/chart type
+                  </p>
+              </div>
+            </div>  
           </div>
-        </iron-pages>
+        </div>  
       </div>
-      <div class="buttons">
-        <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
-        <paper-button on-tap="_submit"
-          disabled="{{!_enableButton(selectedChart, selectedMeasurements.*, selectedExistingMeasurements.*, tabSelected.*)}}"
-          dialog-confirm autofocus>Add Chart</paper-button>
-      </div>
-      <template is="dom-if" if="[[loading]]">
-          <paper-spinner-lite class="spinner-overlay" active=[[loading]]></paper-spinner-lite>
+        </div>  
+        <div class="buttons">
+          <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
+          <paper-button on-tap="_submit"
+            disabled="{{!_enableButton(selectedChart, selectedMeasurements.*, selectedExistingMeasurements.*, tabSelected.*)}}"
+            dialog-confirm autofocus>Add Chart
+          </paper-button>
+        </div>
       </template>
-    </template>
+      <template is="dom-if" if="[[loading]]">
+        <paper-spinner-lite class="spinner-overlay" active=[[loading]]></paper-spinner-lite>
+      </template>
     </paper-dialog>
   </template>
 
@@ -355,8 +362,8 @@
           selectedChart: {
             type: String,
             notify: true,
-            value: "MultiStackedLineTrack",
-            observer: "_refitModal",
+            value: "MultiStackedLineTrack"
+            // observer: "_refitModal",
           },
 
           /**
@@ -489,6 +496,14 @@
         this.set('error', true)
       }
 
+      _showTable(error, ms) {
+        if (this.error){
+          return false;
+        }
+
+        return this._tableDataExists(ms);
+      }
+
       _fetchMeasurements() {
         this.$.getMeasurements.generateRequest();
       }
@@ -526,7 +541,9 @@
       }
 
       handleGetProjects(e) {
+        var self = this;
         const data = e.detail.response;
+
         const projects = {};
         data.forEach((it) => {
           if(!it.genomes.includes(this.genome)) {
@@ -534,19 +551,23 @@
           }
           projects[it.project_id] = it;
         });
+
         this.setProperties({
           projects: projects,
         });
 
         this.collection_id = "";
+
         if (!this.projectId) {
           this.set("projectId", Object.keys(projects)[0]);
         }
+
         if (!projects[this.projectId]) {
-          this.set("error", true)
+          this.set("error", true);
         } else {
-          this.set("error", false)
+          this.set("error", false);
         }
+        // this._refitModal();
       }
 
       handleGetCollections(e) {
@@ -597,7 +618,7 @@
       chooseChartType(data) {
         var self = this;
         if (this.relevantCharts && this.relevantCharts[0]) {
-          // this.selectedChart = this.relevantCharts[0];
+          // self.set("selectedChart", this.relevantCharts[0]);
           self.set("selectedChart", undefined);
           setTimeout(() => { 
             // self.selectedChart = self.relevantCharts[0]; 
@@ -822,6 +843,7 @@
         if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
           delete chartTypes["EpivizNavigation"];
         }
+
         if (relevantCharts) {
           return relevantCharts;
         }
@@ -834,7 +856,7 @@
       }
 
       _tableDataExists(tableData) {
-        return tableData.length > 0;
+        return tableData && tableData.length > 0;
       }
 
       _enableButton(selectedChart, selectedMeasurements, selectedExistingMeasurements, tabSelected) {
