@@ -78,6 +78,11 @@
         overflow: hidden;
       }
 
+      .scrollable.scrollable.scrollable{
+        max-height: 78vh;
+        overflow: auto;
+      }
+
       :host .spinner-overlay {
         position: absolute;
         width: 75px;
@@ -104,6 +109,7 @@
         position: fixed;
         top: 0;
         left: 0;
+        max-height: 100vh;
         width: 90%;
       }
 
@@ -248,7 +254,7 @@
           </paper-tabs>
         </div>
       </div>
-      <paper-dialog-scrollable>
+      <div class="scrollable">
         <iron-pages selected="{{tabSelected}}">
           <div class="dialog-content">
             <template is="dom-if" if="[[_tableDataExists(_jsonMeasurements)]]">
@@ -262,7 +268,7 @@
             </p>
           </div>
         </iron-pages>
-      </paper-dialog-scrollable>
+      </div>
       <div class="buttons">
         <paper-button on-tap="_close" dialog-dismiss>Close</paper-button>
         <paper-button on-tap="_submit"
@@ -920,6 +926,7 @@
           projectId: Object.keys(this.projects)[0],
           error: false
         });
+        setTimeout(() => this.$.modal.refit(), 0);
       }
 
       _showModal(event) {
