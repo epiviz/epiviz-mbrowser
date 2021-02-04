@@ -78,9 +78,9 @@
         overflow: hidden;
       }
 
-      .scrollable.scrollable.scrollable{
-        max-height: 75vh;
-        overflow: auto;
+      .scrollable{
+        overflow-x: hidden;
+        overflow-y: auto;
       }
 
       :host .spinner-overlay {
@@ -105,11 +105,13 @@
       }
 
       #modal {
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
         position: fixed;
         top: 0;
         left: 0;
-        max-height: 100vh;
+        max-height: calc(100vh - 48px);
         width: 90%;
       }
 
