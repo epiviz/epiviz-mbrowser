@@ -364,8 +364,8 @@
           selectedChart: {
             type: String,
             notify: true,
-            value: "MultiStackedLineTrack"
-            // observer: "_refitModal",
+            value: "MultiStackedLineTrack",
+            observer: "_refitModal",
           },
 
           /**
@@ -883,7 +883,7 @@
             return true;
           }
 
-          if (this.tabSelected === 0 && this.selectedMeasurements && this.selectedMeasurements.length > 0) {
+          if (this.tabSelected === 0 && selectedMeasurements.value && selectedMeasurements.value.length > 0) {
             return true;
           }
         }
@@ -969,6 +969,7 @@
         });
         setTimeout(() => this.$.modal.refit(), 0);
       }
+
       _showModal(event) {
         this.autoOpen = false;
 
@@ -991,9 +992,6 @@
       }
 
       _userChanged(user, userToken) {
-        // console.log("in mbrowser");
-        // console.log(user, userToken);
-        // console.log(this.user, this.userToken);
         this.set("error", false);
 
         if (this.user != "undefined" && this.userToken != "undefined") {
