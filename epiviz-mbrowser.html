@@ -642,12 +642,17 @@
         const data = e.detail.response;
         this.measurementsHandling(data);
         const relevantCharts = this._relevantCharts(this.measurementsRaw);
-        const availableCharts = relevantCharts.filter(chart => {
-          debugger;
-          this.selectedMeasurements;
-          this._getChartTypes([chart]);
-        });
-        this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
+        let currentChartType;
+        if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
+          let [currentChartType] = this._getChartTypes([this.selectedMeasurements[0]]);
+          const availableCharts = relevantCharts.filter(chart => {
+            return currentChartType === this.selectedChart;
+          });
+          this.set('relevantCharts', availableCharts);
+        } else {
+          this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
+        }
+       
         this.chooseChartType(data);
         // this._updateMeasurementView();
         this.initialLaunch++;
@@ -673,16 +678,20 @@
         var relCharts = {};
 
         data.forEach(function(m) {
-          if (m.annotation._filetype == "gwas") {
-            relCharts["GwasTrack"] = true;
-          } else if (m.annotation._filetype == "tiledb") {
-            relCharts["HeatmapPlot"] = true;
-          } else if (m.annotation._filetype == "transcript") {
-            relCharts["TranscriptTrack"] = true;
-          } else if (m.annotation._filetype == "interaction_bigbed") {
-            relCharts["InteractionTrack"] = true;
-          } else if (m.annotation._filetype == "bigbed") {
-            relCharts["StackedBlocksTrack"] = true;
+          if(m.annotation) {
+            if (m.annotation._filetype == "gwas") {
+              relCharts["GwasTrack"] = true;
+            } else if (m.annotation._filetype == "tiledb") {
+              relCharts["HeatmapPlot"] = true;
+            } else if (m.annotation._filetype == "transcript") {
+              relCharts["TranscriptTrack"] = true;
+            } else if (m.annotation._filetype == "interaction_bigbed") {
+              relCharts["InteractionTrack"] = true;
+            } else if (m.annotation._filetype == "bigbed") {
+              relCharts["StackedBlocksTrack"] = true;
+            } else {
+              relCharts["MultiStackedLineTrack"] = true;
+            }
           } else {
             relCharts["MultiStackedLineTrack"] = true;
           }
