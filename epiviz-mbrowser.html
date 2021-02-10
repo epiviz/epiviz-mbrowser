@@ -348,8 +348,7 @@
 
           freezChartType: {
             type: String,
-            notify: true,
-            computed: "_chartTypeOfSelectedMS()",
+            notify: true
           },
 
           selectedMeasurements: {
@@ -534,14 +533,6 @@
 
         return this._tableDataExists(ms);
       }
-      
-      _chartTypeOfSelectedMS() {
-        if(this.selectedMeasurements) {
-          return
-        } else {
-          return '';
-        }
-      }
 
       _selectedMeasurementsObserver(newVal, oldVal) {
         this.set('isChartSelectionDisabled', (newVal && newVal.length > 0));
@@ -656,9 +647,6 @@
         let currentChartType;
         if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
           let [currentChartType] = this._getChartTypes([this.selectedMeasurements[0]]);
-          const availableCharts = relevantCharts.filter(chart => {
-            return chart === this.selectedChart;
-          });
           this.setProperties({
             relevantCharts: [this.selectedChart],
           })
@@ -703,8 +691,6 @@
             } else {
               relCharts["MultiStackedLineTrack"] = true;
             }
-          } else {
-            relCharts["MultiStackedLineTrack"] = true;
           }
         });
 
