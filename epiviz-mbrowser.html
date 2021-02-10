@@ -652,7 +652,6 @@
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
-        //todo here
         const relevantCharts = this._relevantCharts(this.measurementsRaw);
         let currentChartType;
         if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
@@ -663,13 +662,11 @@
           this.setProperties({
             relevantCharts: [this.selectedChart],
           })
-          // this._updateMeasurementView();
         } else {
           this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         }
        
         this.chooseChartType(data);
-        // this._updateMeasurementView();
         this.initialLaunch++;
       }
 
@@ -689,7 +686,6 @@
       }
 
       _getChartTypes(data) {
-
         var relCharts = {};
 
         data.forEach(function(m) {
