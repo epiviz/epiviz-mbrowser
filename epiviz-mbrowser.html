@@ -249,7 +249,7 @@
               </paper-dropdown-menu>
             </div>
             <div>
-              <paper-dropdown-menu always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" no-animations>
+              <paper-dropdown-menu disabled=[[isChartSelectionDisabled]] always-float-label horizontal-align="left" vertical-offset="42" label="Choose chart type" no-animations>
                 <paper-listbox slot="dropdown-content" class="dropdown-content" selected="{{selectedChart}}" attr-for-selected="value">
                   <template is="dom-repeat" items="[[_charts]]" mutable-data>
                     <paper-item on-click="_updateMeasurementView" value$="[[item]]">[[item]]</paper-item>
@@ -263,7 +263,7 @@
         </div>
           <div class="scrollable">
               <div class="dialog-content">
-                <template is="dom-if" if="[[_showTable(error, _jsonMeasurements)]]">
+                <template is="dom-if" if="[[!error)]]">
                   <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
                     selected-items="{{selectedMeasurements}}">
                   </data-filter>
@@ -354,7 +354,8 @@
 
           selectedMeasurements: {
             type: Array,
-            notify: true
+            notify: true,
+            observer: "_selectedMeasurementsObserver"
           },
 
           selectedExistingMeasurements: {
@@ -372,6 +373,11 @@
             notify: true,
             value: "MultiStackedLineTrack",
             observer: "_refitModal",
+          },
+          
+          isChartSelectionDisabled: {
+            type: Boolean,
+            value: false,
           },
 
           /**
@@ -422,6 +428,7 @@
 
           _jsonMeasurements: {
             type: Array,
+            value: [],
           },
 
           tabSelected: {
@@ -536,6 +543,10 @@
         }
       }
 
+      _selectedMeasurementsObserver(newVal, oldVal) {
+        this.set('isChartSelectionDisabled', (newVal && newVal.length > 0));
+      }
+
       _fetchMeasurements() {
         this.$.getMeasurements.generateRequest();
       }
@@ -641,14 +652,18 @@
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
+        //todo here
         const relevantCharts = this._relevantCharts(this.measurementsRaw);
         let currentChartType;
         if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
           let [currentChartType] = this._getChartTypes([this.selectedMeasurements[0]]);
           const availableCharts = relevantCharts.filter(chart => {
-            return currentChartType === this.selectedChart;
+            return chart === this.selectedChart;
           });
-          this.set('relevantCharts', availableCharts);
+          this.setProperties({
+            relevantCharts: [this.selectedChart],
+          })
+          // this._updateMeasurementView();
         } else {
           this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         }
@@ -674,7 +689,7 @@
       }
 
       _getChartTypes(data) {
-        
+
         var relCharts = {};
 
         data.forEach(function(m) {
