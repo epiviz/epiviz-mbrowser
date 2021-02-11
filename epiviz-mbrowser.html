@@ -810,9 +810,6 @@
           if (chartType == "GenesTrack") {
             filteredMeasurements = measurements.filter(m => m.defaultChartType == "Genes Track");
           }
-          else if (chartType.indexOf("Blocks") != -1) {
-            filteredMeasurements = measurements.filter(m => m.type == "range");
-          }
           else if (chartType.indexOf("Plot") != -1) {
             filteredMeasurements = measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
           }
@@ -824,6 +821,10 @@
           }
           else if (chartType.indexOf("Interaction") != -1) {
             filteredMeasurements = measurements.filter(m => ["interaction_bigbed"].includes(m.annotation["_filetype"]));
+          }
+          else if (chartType.indexOf("Blocks") != -1) {
+            filteredMeasurements = measurements.filter(m => m.type == "range" && 
+            !["gwas", "transcript", "interaction_bigbed"].includes(m.annotation._filetype));
           }
           else {
             filteredMeasurements = measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
