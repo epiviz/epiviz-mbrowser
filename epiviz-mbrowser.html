@@ -532,6 +532,10 @@
 
       _selectedMeasurementsObserver(newVal, oldVal) {
         this.set('isChartSelectionDisabled', (newVal && newVal.length > 0));
+        if (!this.isChartSelectionDisabled) {
+          this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
+          this.chooseChartType();
+        }
       }
 
       _fetchMeasurements() {
@@ -639,22 +643,18 @@
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
-        const relevantCharts = this._relevantCharts(this.measurementsRaw);
         let currentChartType;
         if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
-          let [currentChartType] = this._getChartTypes([this.selectedMeasurements[0]]);
-          this.setProperties({
-            relevantCharts: [this.selectedChart],
-          })
+          this.set('relevantCharts', [this.selectedChart]);
         } else {
           this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
         }
        
-        this.chooseChartType(data);
+        this.chooseChartType();
         this.initialLaunch++;
       }
 
-      chooseChartType(data) {
+      chooseChartType() {
         var self = this;
         if (this.relevantCharts && this.relevantCharts[0]) {
           // self.set("selectedChart", this.relevantCharts[0]);
