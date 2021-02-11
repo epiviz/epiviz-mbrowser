@@ -342,11 +342,6 @@
             value: {}
           },
 
-          freezChartType: {
-            type: String,
-            notify: true
-          },
-
           selectedMeasurements: {
             type: Array,
             notify: true,
@@ -423,7 +418,6 @@
 
           _jsonMeasurements: {
             type: Array,
-            value: [],
           },
 
           tabSelected: {
@@ -643,7 +637,7 @@
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
-        let currentChartType;
+
         if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
           this.set('relevantCharts', [this.selectedChart]);
         } else {
@@ -673,20 +667,18 @@
         var relCharts = {};
 
         data.forEach(function(m) {
-          if(m.annotation) {
-            if (m.annotation._filetype == "gwas") {
-              relCharts["GwasTrack"] = true;
-            } else if (m.annotation._filetype == "tiledb") {
-              relCharts["HeatmapPlot"] = true;
-            } else if (m.annotation._filetype == "transcript") {
-              relCharts["TranscriptTrack"] = true;
-            } else if (m.annotation._filetype == "interaction_bigbed") {
-              relCharts["InteractionTrack"] = true;
-            } else if (m.annotation._filetype == "bigbed") {
-              relCharts["StackedBlocksTrack"] = true;
-            } else {
-              relCharts["MultiStackedLineTrack"] = true;
-            }
+          if (m.annotation._filetype == "gwas") {
+            relCharts["GwasTrack"] = true;
+          } else if (m.annotation._filetype == "tiledb") {
+            relCharts["HeatmapPlot"] = true;
+          } else if (m.annotation._filetype == "transcript") {
+            relCharts["TranscriptTrack"] = true;
+          } else if (m.annotation._filetype == "interaction_bigbed") {
+            relCharts["InteractionTrack"] = true;
+          } else if (m.annotation._filetype == "bigbed") {
+            relCharts["StackedBlocksTrack"] = true;
+          } else {
+            relCharts["MultiStackedLineTrack"] = true;
           }
         });
 
