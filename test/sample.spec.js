@@ -230,15 +230,15 @@ describe("mbrowser test", async () => {
     );
     assert.strictEqual(measuremnt_data.amount > 1, true);
     chai.assert.equalIgnoreCase(
-      "LHX2 enhancers",
+      "NEUNnuclei H3K27ac peaks (internal)",
       measuremnt_data.first_measurement_text
     );
     chai.assert.equalIgnoreCase(
-      "Microglia epigenetic data from Nott et al.",
+      "Internally processed data from the Nott et al. study",
       measuremnt_data.project_name
     );
     chai.assert.equalIgnoreCase(
-      "Microglia epigenetic data from Nott et al.",
+      "Internally processed data from the Nott et al. study",
       measuremnt_data.collection_name
     );
     chai.assert.equalIgnoreCase(
@@ -304,17 +304,17 @@ describe("mbrowser test", async () => {
       );
       assert.strictEqual(measuremnt_data.amount > 1, true);
       chai.assert.equalIgnoreCase(
-        "LHX2 enhancers",
+        "NEUNnuclei H3K27ac peaks (internal)",
         measuremnt_data.first_measurement_text,
         "measurement"
       );
       chai.assert.equalIgnoreCase(
-        "Microglia epigenetic data from Nott et al.",
+        "Internally processed data from the Nott et al. study",
         measuremnt_data.project_name,
         "project"
       );
       chai.assert.equalIgnoreCase(
-        "Microglia epigenetic data from Nott et al.",
+        "Internally processed data from the Nott et al. study",
         measuremnt_data.collection_name,
         "collection"
       );
@@ -379,22 +379,22 @@ describe("mbrowser test", async () => {
     );
     assert.strictEqual(measuremnt_data.amount > 1, true);
     chai.assert.equalIgnoreCase(
-      "Brain tracks from epigenome roadmap",
+      "Data from the Nott et al. study (hg38)",
       measuremnt_data.project_name,
       "project after"
     );
     chai.assert.equalIgnoreCase(
-      "Brain tracks from epigenome roadmap",
+      "Data from the Nott et al. study (hg38)",
       measuremnt_data.collection_name,
       "collection after"
     );
     chai.assert.equalIgnoreCase(
-      "MultiStackedLineTrack",
+      "StackedBlocksTrack",
       measuremnt_data.chart_type,
       "chart type after"
     );
     chai.assert.equalIgnoreCase(
-      "Neurosphere_Cultured_Cells_Cortex_Derived H3K4me3",
+      "Olig2 enhancers",
       measuremnt_data.first_measurement_text,
       "measurement after"
     );
