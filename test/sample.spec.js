@@ -85,7 +85,7 @@ describe("mbrowser test", async () => {
     console.log("elapsed time: ", new Date() - start);
   });
 
-  it("check select all button for second project", async () => {
+  it("check that chart type is persisted between projects", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
@@ -172,7 +172,6 @@ describe("mbrowser test", async () => {
     );
   });
 
-/*
   it("check select all button for second project", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
@@ -205,10 +204,10 @@ describe("mbrowser test", async () => {
 
     // click select all
     await page.waitForSelector(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > div.cardselectall > paper-button"
     );
     const select_all_button = await page.$eval(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > div.cardselectall > paper-button",
       (button) => {
         button.click();
 
@@ -218,10 +217,10 @@ describe("mbrowser test", async () => {
     );
 
     await page.waitForSelector(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]"
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > div.cardselectall > paper-button[disabled]"
     );
     const select_all_disabled_button = await page.$eval(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]",
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > div.cardselectall > paper-button[disabled]",
       (button) => {
         return button.textContent.trim();
       }
@@ -272,8 +271,6 @@ describe("mbrowser test", async () => {
     );
   });
   
-
-
   it("check disabling of the Selection type Dropdown", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
@@ -333,7 +330,7 @@ describe("mbrowser test", async () => {
     );
   });
   
-  it("check select all button", async () => {
+  it("check select all button disabled", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
@@ -714,5 +711,4 @@ describe("mbrowser test", async () => {
   });
   // it('test blank', async () => {
   // });
-  */
 });
