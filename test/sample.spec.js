@@ -85,6 +85,70 @@ describe("mbrowser test", async () => {
     console.log("elapsed time: ", new Date() - start);
   });
 
+  it("check select all button", async () => {
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|paper-button"
+    );
+    const { button_text, visibility } = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|paper-button ",
+      (button) => {
+        button.click();
+        return {
+          button_text: button.textContent.trim(),
+          visibility: button.getComputedStyleValue("visibility"),
+        };
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements2 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        measurements[0].querySelector("paper-icon-button").click();
+        measurements[1].querySelector("paper-icon-button").click();
+        console.log("measurements", measurements);
+        return measurements.length;x
+      }
+    );
+    assert.strictEqual(measurements2 > 1, true);
+    console.log(`measurements length "${measurements2}" `);
+
+    // click select all
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
+    );
+    const select_all_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
+      (button) => {
+        button.click();
+
+        console.log("button", button);
+        return button.textContent.trim();
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]"
+    );
+    const select_all_disabled_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]",
+      (button) => {
+        button.click();
+
+        console.log("button", button);
+        return button.textContent.trim();
+      }
+    );
+    
+    chai.assert.equalIgnoreCase(
+      select_all_disabled_button,
+      "select All",
+      "select All button have not disabled"
+    );
+  });
+
   it("erase selected measurements after reopen dialog", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
