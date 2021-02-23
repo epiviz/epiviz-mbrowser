@@ -84,15 +84,13 @@ describe("mbrowser test", async () => {
     await page.close();
     console.log("elapsed time: ", new Date() - start);
   });
-  // document.querySelector("#measurement > epiviz-measurement-browser")
-  // .shadowRoot.querySelector("#cardElem")
-  // .shadowRoot.querySelector("#selectionContainer > paper-dropdown-menu:nth-child(3)[disabled]")
-  it("check disabling of the Selection type Dropdown", async () => {
+
+  it("check select all button for second project", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
     const { button_text, visibility } = await page.$eval(
-      "shadowDom/epiviz-measurement-browser|paper-button",
+      "shadowDom/epiviz-measurement-browser|paper-button ",
       (button) => {
         button.click();
         return {
@@ -132,6 +130,105 @@ describe("mbrowser test", async () => {
     );
 
     await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]"
+    );
+    const select_all_disabled_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]",
+      (button) => {
+        return button.textContent.trim();
+      }
+    );
+    
+    chai.assert.equalIgnoreCase(
+      select_all_disabled_button,
+      "select All",
+      "select All button have not disabled"
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input"
+    );
+    await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input",
+      (project_selection) => project_selection.click()
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#collectionProject > paper-listbox > paper-item"
+    );
+    await page.$$eval(
+      "shadowDom/epiviz-measurement-browser@#collectionProject > paper-listbox > paper-item",
+      (projects) => projects[2].click()
+    );
+
+    // click select all
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]"
+    );
+    const select_all_disabled_button_again = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]",
+      (button) => {
+        button.click();
+        return button.textContent.trim();
+      }
+    );
+    
+    chai.assert.equalIgnoreCase(
+      select_all_disabled_button_again,
+      "select All",
+      "select All button have not disabled"
+    );
+  });
+
+/*
+  it("check disabling of the Selection type Dropdown", async () => {
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|paper-button"
+    );
+    const { button_text, visibility } = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|paper-button",
+      (button) => {
+        button.click();
+        return {
+          button_text: button.textContent.trim(),
+          visibility: button.getComputedStyleValue("visibility"),
+        };
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements2 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        measurements[0].querySelector("paper-icon-button").click();
+        measurements[1].querySelector("paper-icon-button").click();
+        console.log("measurements", measurements);
+        return measurements.length;x
+      }
+    );
+    assert.strictEqual(measurements2 > 1, true);
+
+    // click select all
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
+    );
+    const select_all_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
+      (button) => {
+        button.click();
+
+        console.log("button", button);
+        return button.textContent.trim();
+      }
+    );
+
+    await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)[disabled]"
     );
     const select_all_disabled_button = await page.$eval(
@@ -146,7 +243,7 @@ describe("mbrowser test", async () => {
       "selection type Dropdown didnt't disabled"
     );
   });
-  /*
+  
   it("check select all button", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
@@ -451,6 +548,7 @@ describe("mbrowser test", async () => {
       );
     }
 
+    // select project
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input"
     );
