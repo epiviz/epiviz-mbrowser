@@ -85,6 +85,114 @@ describe("mbrowser test", async () => {
     console.log("elapsed time: ", new Date() - start);
   });
 
+  it("check enabling of the Selection type Dropdown after disabling", async () => {
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|paper-button"
+    );
+    const { button_text, visibility } = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|paper-button",
+      (button) => {
+        button.click();
+        return {
+          button_text: button.textContent.trim(),
+          visibility: button.getComputedStyleValue("visibility"),
+        };
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements2 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        return measurements.length;x
+      }
+    );
+    assert.strictEqual(measurements2 > 1, true);
+
+    // click select all
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
+    );
+    const select_all_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
+      (button) => {
+        button.click();
+
+        console.log("button", button);
+        return button.textContent.trim();
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)[disabled]"
+    );
+    const select_all_disabled_button = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)[disabled]",
+      (button) => {
+        return button.textContent.replaceAll('\n', '').replaceAll(' ', '');
+      }
+    );
+     // check cahrt type
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]"
+    );
+
+    const selected_chart_type1 = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]",
+      (button) => {
+        return button.textContent.trim();
+      }
+    );
+    console.log('selected cahrt ', selected_chart_type1);
+  
+    const clear_all = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectedContainer > div.clearallcontainer > paper-button",
+      (button) => {
+        button.click()
+        return button.textContent.trim();
+      }
+    );
+
+    console.log('Clear all', clear_all);
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements3 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        return measurements.length;x
+      }
+    );
+    assert.strictEqual(measurements3 > 1, true);
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)"
+    );
+    const selection_typ = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)",
+      (button) => {
+        return button.textContent.replaceAll('\n', '').replaceAll(' ', '');
+      }
+    );
+  
+    // check cahrt type
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]"
+    );
+
+    const selected_chart_type = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]",
+      (button) => {
+        return button.textContent.trim();
+      }
+    );
+    console.log('selected chart ', selected_chart_type);
+  });
+
+  /*
   it("check that chart type is persisted between projects", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
@@ -553,6 +661,7 @@ describe("mbrowser test", async () => {
     chai.assert.equalIgnoreCase(
       "StackedBlocksTrack",
       measuremnt_data.chart_type
+      
     );
   });
 
@@ -711,4 +820,5 @@ describe("mbrowser test", async () => {
   });
   // it('test blank', async () => {
   // });
+  */
 });
