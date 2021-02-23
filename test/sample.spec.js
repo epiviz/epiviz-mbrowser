@@ -108,6 +108,94 @@ describe("mbrowser test", async () => {
       (measurements) => {
         measurements[0].querySelector("paper-icon-button").click();
         measurements[1].querySelector("paper-icon-button").click();
+        return measurements.length;
+      }
+    );
+    assert.strictEqual(measurements2 > 1, true);
+
+    // check cahrt type
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu > paper-listbox > paper-item.iron-selected"
+    );
+    const selected_chart_type = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu > paper-listbox > paper-item.iron-selected",
+      (button) => {
+        return button.textContent.trim();
+      }
+    );
+    console.log('selected cahrt ', selected_chart_type);
+    
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input"
+    );
+    await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input",
+      (project_selection) => project_selection.click()
+    );
+
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#collectionProject > paper-listbox > paper-item"
+    );
+    await page.$$eval(
+      "shadowDom/epiviz-measurement-browser@#collectionProject > paper-listbox > paper-item",
+      (projects) => projects[2].click()
+    );
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements3 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        measurements[0].querySelector("paper-icon-button").click();
+        measurements[1].querySelector("paper-icon-button").click();
+        console.log("measurements", measurements);
+        return measurements.length;
+      }
+    );
+    // check cahrt type again
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu > paper-listbox > paper-item.iron-selected"
+    );
+    const currently_selected_chart_type = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu > paper-listbox > paper-item.iron-selected",
+      (button) => {
+        return button.textContent.trim();
+      }
+    );
+    console.log('currently selected cahrt ', currently_selected_chart_type);
+    
+    chai.assert.equalIgnoreCase(
+      selected_chart_type,
+      currently_selected_chart_type,
+      "select All button have not disabled"
+    );
+  });
+
+/*
+  it("check select all button for second project", async () => {
+    await page.waitForSelector(
+      "shadowDom/epiviz-measurement-browser|paper-button"
+    );
+    const { button_text, visibility } = await page.$eval(
+      "shadowDom/epiviz-measurement-browser|paper-button ",
+      (button) => {
+        button.click();
+        return {
+          button_text: button.textContent.trim(),
+          visibility: button.getComputedStyleValue("visibility"),
+        };
+      }
+    );
+
+    await page.waitForSelector(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
+    );
+    const measurements2 = await page.$$eval(
+      "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
+      (measurements) => {
+        measurements[0].querySelector("paper-icon-button").click();
+        measurements[1].querySelector("paper-icon-button").click();
         console.log("measurements", measurements);
         return measurements.length;x
       }
@@ -183,8 +271,9 @@ describe("mbrowser test", async () => {
       "select All button have not disabled"
     );
   });
+  
 
-/*
+
   it("check disabling of the Selection type Dropdown", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
