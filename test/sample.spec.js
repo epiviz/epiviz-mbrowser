@@ -85,7 +85,7 @@ describe("mbrowser test", async () => {
     console.log("elapsed time: ", new Date() - start);
   });
 
-  it("check enabling of the Selection type Dropdown after disabling", async () => {
+  it("check enabling/disabling of the selection type dropdown", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
@@ -155,7 +155,6 @@ describe("mbrowser test", async () => {
       }
     );
 
-    console.log('Clear all', clear_all);
 
     await page.waitForSelector(
       "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
@@ -168,28 +167,19 @@ describe("mbrowser test", async () => {
     );
     assert.strictEqual(measurements3 > 1, true);
 
-    await page.waitForSelector(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)"
-    );
-    const selection_typ = await page.$eval(
-      "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer > paper-dropdown-menu:nth-child(3)",
-      (button) => {
-        return button.textContent.replaceAll('\n', '').replaceAll(' ', '');
-      }
-    );
-  
+
     // check cahrt type
     await page.waitForSelector(
-      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]"
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu"
     );
 
     const selected_chart_type = await page.$eval(
-      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]",
+      "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu",
       (button) => {
         return button.textContent.trim();
       }
     );
-    console.log('selected chart ', selected_chart_type);
+    chai.assert.isOk(selected_chart_type, 'disabled correctly');
   });
 
   /*
