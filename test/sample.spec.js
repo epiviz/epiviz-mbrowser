@@ -182,7 +182,7 @@ describe("mbrowser test", async () => {
     chai.assert.isOk(selected_chart_type, 'disabled correctly');
   });
 
-  /*
+  
   it("check that chart type is persisted between projects", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
@@ -810,5 +810,5 @@ describe("mbrowser test", async () => {
   });
   // it('test blank', async () => {
   // });
-  */
+
 });
