@@ -106,7 +106,7 @@ describe("mbrowser test", async () => {
     const measurements2 = await page.$$eval(
       "shadowDom/#measurement > epiviz-measurement-browser|#cardElem@#cardContainer > paper-card",
       (measurements) => {
-        return measurements.length;x
+        return measurements.length;
       }
     );
     assert.strictEqual(measurements2 > 1, true);
@@ -134,7 +134,7 @@ describe("mbrowser test", async () => {
         return button.textContent.replaceAll('\n', '').replaceAll(' ', '');
       }
     );
-     // check cahrt type
+    // check cahrt type dropdown
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu[disabled]"
     );
@@ -147,15 +147,14 @@ describe("mbrowser test", async () => {
     );
     console.log('selected cahrt ', selected_chart_type1);
   
-    const clear_all = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectedContainer > div.clearallcontainer > paper-button",
       (button) => {
-        button.click()
-        return button.textContent.trim();
+        button.click();
       }
     );
 
-
+    //wait for measurements
     await page.waitForSelector(
       "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
     );
@@ -168,7 +167,7 @@ describe("mbrowser test", async () => {
     assert.strictEqual(measurements3 > 1, true);
 
 
-    // check cahrt type
+    // check cahrt type dropdown
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu"
     );
@@ -181,7 +180,6 @@ describe("mbrowser test", async () => {
     );
     chai.assert.isOk(selected_chart_type, 'disabled correctly');
   });
-
   
   it("check that chart type is persisted between projects", async () => {
     await page.waitForSelector(
@@ -197,7 +195,7 @@ describe("mbrowser test", async () => {
         };
       }
     );
-
+    //wait for measurements 
     await page.waitForSelector(
       "shadowDom/#measurement > epiviz-measurement-browser|#cardElem|#cardContainer > paper-card"
     );
@@ -223,6 +221,7 @@ describe("mbrowser test", async () => {
     );
     console.log('selected cahrt ', selected_chart_type);
     
+    // change project
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#collectionProject|#menuButton > div > paper-input"
     );
@@ -251,6 +250,7 @@ describe("mbrowser test", async () => {
         return measurements.length;
       }
     );
+
     // check cahrt type again
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#modal > div.header > div:nth-child(3) > paper-dropdown-menu > paper-listbox > paper-item.iron-selected"
@@ -274,14 +274,10 @@ describe("mbrowser test", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
-    const { button_text, visibility } = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|paper-button ",
       (button) => {
         button.click();
-        return {
-          button_text: button.textContent.trim(),
-          visibility: button.getComputedStyleValue("visibility"),
-        };
       }
     );
 
@@ -298,7 +294,6 @@ describe("mbrowser test", async () => {
       }
     );
     assert.strictEqual(measurements2 > 1, true);
-    console.log(`measurements length "${measurements2}" `);
 
     // click select all
     await page.waitForSelector(
@@ -373,14 +368,10 @@ describe("mbrowser test", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
-    const { button_text, visibility } = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|paper-button",
       (button) => {
         button.click();
-        return {
-          button_text: button.textContent.trim(),
-          visibility: button.getComputedStyleValue("visibility"),
-        };
       }
     );
 
@@ -402,13 +393,10 @@ describe("mbrowser test", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
     );
-    const select_all_button = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
       (button) => {
         button.click();
-
-        console.log("button", button);
-        return button.textContent.trim();
       }
     );
 
@@ -432,14 +420,10 @@ describe("mbrowser test", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|paper-button"
     );
-    const { button_text, visibility } = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|paper-button ",
       (button) => {
         button.click();
-        return {
-          button_text: button.textContent.trim(),
-          visibility: button.getComputedStyleValue("visibility"),
-        };
       }
     );
 
@@ -462,13 +446,10 @@ describe("mbrowser test", async () => {
     await page.waitForSelector(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button"
     );
-    const select_all_button = await page.$eval(
+    await page.$eval(
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button",
       (button) => {
         button.click();
-
-        console.log("button", button);
-        return button.textContent.trim();
       }
     );
 
@@ -479,8 +460,6 @@ describe("mbrowser test", async () => {
       "shadowDom/epiviz-measurement-browser|#cardElem|#selectionContainer  > div.cardselectall > paper-button[disabled]",
       (button) => {
         button.click();
-
-        console.log("button", button);
         return button.textContent.trim();
       }
     );
