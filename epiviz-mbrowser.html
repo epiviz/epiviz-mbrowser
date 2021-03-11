@@ -573,6 +573,10 @@
       _collectionGenomeChanged(nVal, oVal) {
         var self = this;
 
+        if (!nVal) {
+          return;
+        }
+
         if (self.projects) {
           let projects = {}
           Object.keys(self.projects).forEach(function(prj) {
@@ -684,9 +688,23 @@
           self._refitModal();
         }
 
+        if (self.collectionsObj) {
+          let colls = {}
+          Object.keys(self.collectionsObj).forEach(function(coll) {
+            if(!self.collectionsObj[coll].genomes.includes(self.genome)) {
+              return ;//skip;
+            }
+            colls[coll] = self.collectionsObj[coll];
+          });
+
+          self.setProperties({
+            collectionsObj: colls,
+          });
+        }
+
         if (self.initialLaunch > 1 || !self.collectionId) {
           self.collectionId = undefined;
-          setTimeout(() => { self.collectionId = Object.keys(collectionsObj)[0]; }, 0);
+          setTimeout(() => { self.collectionId = Object.keys(self.collectionsObj)[0]; }, 0);
         }
       }
 
