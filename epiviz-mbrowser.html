@@ -575,7 +575,7 @@
 
         const projects = {};
         data.forEach((it) => {
-          if(!it.genomes.includes(this.genome)) {
+          if(!it.genomes.includes(this.genome)  && !self.autoOpen) {
             return ;//skip;
           }
           projects[it.project_id] = it;
@@ -611,7 +611,7 @@
         }
 
         data.forEach((it) => {
-          if(!it.genomes.includes(this.genome)) {
+          if(!it.genomes.includes(this.genome)  && !self.autoOpen) {
             return ;//skip;
           }
           collectionsObj[it.collection_id] = it;
@@ -625,8 +625,23 @@
         });
 
         if(self.initialLaunch && self.autoOpen) {
-          self.collectionGenome = collectionsObj[Object.keys(collectionsObj)[0]].genomes[0];
-          self.genome = self.collectionGenome;
+          let tgenome = collectionsObj[Object.keys(collectionsObj)[0]].genomes;
+
+          if (!tgenome.includes(self.genome)) {
+            self.genome = self.collectionGenome = tgenome[0];
+          }
+
+          let projects = {}
+          Object.keys(self.projects).forEach(function(prj) {
+            if(!self.projects[prj].genomes.includes(self.genome)) {
+              return ;//skip;
+            }
+            projects[prj] = self.projects[prj];
+          });
+
+          self.setProperties({
+            projects: projects,
+          });
         }
 
         if (self.initialLaunch > 1 || !self.collectionId) {
