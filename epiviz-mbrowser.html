@@ -470,7 +470,8 @@
           collectionGenome: {
             type: String,
             notify: true,
-            reflectToAttribute: true
+            reflectToAttribute: true,
+            observer: "_collectionGenomeChanged"
           },
 
           user: {
@@ -569,6 +570,40 @@
         }
       }
 
+      _collectionGenomeChanged(nVal, oVal) {
+        var self = this;
+
+        if (self.projects) {
+          let projects = {}
+          Object.keys(self.projects).forEach(function(prj) {
+            if(!self.projects[prj].genomes.includes(self.genome)) {
+              return ;//skip;
+            }
+            projects[prj] = self.projects[prj];
+          });
+
+          self.setProperties({
+            projects: projects,
+          });
+        }
+
+        if (self.collectionsObj) {
+          let colls = {}
+          Object.keys(self.collectionsObj).forEach(function(coll) {
+            if(!self.collectionsObj[coll].genomes.includes(self.genome)) {
+              return ;//skip;
+            }
+            colls[coll] = self.collectionsObj[coll];
+          });
+
+          self.setProperties({
+            collectionsObj: colls,
+          });
+        }
+
+        self._refitModal();
+      }
+
       handleGetProjects(e) {
         var self = this;
         const data = e.detail.response;
@@ -584,8 +619,6 @@
         this.setProperties({
           projects: projects,
         });
-
-        this.collection_id = "";
 
         if (!this.projectId) {
           this.set("projectId", Object.keys(projects)[0]);
@@ -606,31 +639,36 @@
         const collections = data;
         const collectionsObj = {};
 
-        if (!self.collectionsObj) {
-          self.collectionsObj = {};
-        }
+        // if (!self.collectionsObj) {
+        //   self.collectionsObj = {};
+        // }
 
         data.forEach((it) => {
           if(!it.genomes.includes(this.genome)  && !self.autoOpen) {
             return ;//skip;
           }
           collectionsObj[it.collection_id] = it;
-          self.collectionsObj[it.collection_id] = it;
+          // self.collectionsObj[it.collection_id] = it;
         });
-
-        var self = this;
 
         self.setProperties({
           collectionsObj: collectionsObj,
         });
 
-        if(self.initialLaunch && self.autoOpen) {
+        if(self.initialLaunch == 1 && self.autoOpen) {
           let tgenome = collectionsObj[Object.keys(collectionsObj)[0]].genomes;
-
-          if (!tgenome.includes(self.genome)) {
-            self.genome = self.collectionGenome = tgenome[0];
+          if (self.collectionId) {
+            tgenome = collectionsObj[self.collectionId].genomes;
           }
 
+          if (!tgenome.includes(self.genome)) {
+            self.genome = tgenome[0];
+
+            self.set("collectionGenome", self.genome);
+          }
+        }
+
+        if (self.projects) {
           let projects = {}
           Object.keys(self.projects).forEach(function(prj) {
             if(!self.projects[prj].genomes.includes(self.genome)) {
@@ -642,6 +680,8 @@
           self.setProperties({
             projects: projects,
           });
+
+          self._refitModal();
         }
 
         if (self.initialLaunch > 1 || !self.collectionId) {
@@ -683,7 +723,7 @@
         var relCharts = {};
 
         data.forEach(function(m) {
-          if (m.annotation._filetype == "gwas") {
+          if (["gwas", "gwas_tbx"].includes(m.annotation._filetype)) {
             relCharts["GwasTrack"] = true;
           } else if (m.annotation._filetype == "tiledb") {
             relCharts["HeatmapPlot"] = true;
@@ -791,7 +831,7 @@
                 isRelevant = ["tiledb", "tabix"].includes(measurement.annotation["_filetype"]);
               }
               else if (chartType.indexOf("Gwas") != -1) {
-                isRelevant = ["gwas"].includes(measurement.annotation["_filetype"]);
+                isRelevant = ["gwas", "gwas_tbx"].includes(measurement.annotation["_filetype"]);
               }
               else if (chartType.indexOf("Transcript") != -1) {
                 isRelevant = ["transcript"].includes(measurement.annotation["_filetype"]);
@@ -822,7 +862,7 @@
             filteredMeasurements = measurements.filter(m => ["tiledb", "tabix"].includes(m.annotation["_filetype"]));
           }
           else if (chartType.indexOf("Gwas") != -1) {
-            filteredMeasurements = measurements.filter(m => ["gwas"].includes(m.annotation["_filetype"]));
+            filteredMeasurements = measurements.filter(m => ["gwas", "gwas_tbx"].includes(m.annotation["_filetype"]));
           }
           else if (chartType.indexOf("Transcript") != -1) {
             filteredMeasurements = measurements.filter(m => ["transcript"].includes(m.annotation["_filetype"]));
@@ -832,7 +872,7 @@
           }
           else if (chartType.indexOf("Blocks") != -1) {
             filteredMeasurements = measurements.filter(m => m.type == "range" && 
-            !["gwas", "transcript", "interaction_bigbed"].includes(m.annotation._filetype));
+            !["gwas", "gwas_tbx", "transcript", "interaction_bigbed"].includes(m.annotation._filetype));
           }
           else {
             filteredMeasurements = measurements.filter(m => ["bigwig"].includes(m.annotation["_filetype"]));
