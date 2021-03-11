@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test": "mocha --timeout 0  ./test/bootstrap.js --recursive test",
-    "test-brk": "mocha --inspect-brk --timeout 0  ./test/bootstrap.js --recursive test --reporter mochawesome",
+    "test-brk": "mocha --inspect-brk --timeout 0  ./test/bootstrap.js --recursive test",
     "test-1": "mocha --timeout 0  ./test/bootstrap.js --recursive test --reporter mochawesome -g ",
     "test-1-brk": "mocha --inspect-brk --timeout 0  ./test/bootstrap.js --recursive test --reporter mochawesome -g "
   }
