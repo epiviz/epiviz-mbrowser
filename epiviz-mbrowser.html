@@ -178,7 +178,7 @@
       on-response="handleGetCollections" debounce-duration="300"></iron-ajax>
     </iron-ajax>
 
-    <iron-ajax id="getMeasurements" method="GET"
+    <iron-ajax id="getMeasurements" method="POST"
       loading={{loading}}
       on-error="_errorHandler"
       url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
@@ -264,7 +264,7 @@
           <div class="scrollable">
               <div class="dialog-content">
                 <template is="dom-if" if="[[!error)]]">
-                  <data-filter filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
+                  <data-filter pagination={{pagination}} filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
                     selected-items="{{selectedMeasurements}}">
                   </data-filter>
                 </template>
@@ -462,6 +462,11 @@
             notify: true
           },
 
+          pagination: {
+            type: Object,
+            observer: "_paginationChanged"
+          },
+
           initialLaunch: {
             type: Number,
             value: 1
@@ -506,6 +511,10 @@
         ));
       }
 
+      _getFilters(filters){
+        return {filter_by:[]};
+      }
+
       disconnectedCallback() {
         super.disconnectedCallback();
       }
@@ -535,19 +544,31 @@
       }
 
       _fetchMeasurements() {
+        this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
         this.$.getMeasurements.generateRequest();
       }
 
       _collectionIdChanged(newVal, oldVal) {
         // console.log('coll ID newVal, oldVal', newVal, oldVal);
         if (newVal) {
+          this.offset = 0;
           this._fetchMeasurements();
+        }
+      }
+
+      _paginationChanged(newVal, oldVal) {
+        if (newVal.page !== oldVal?.page) {
+          this.offset = newVal.page * newVal.limit;
+          this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
+          this.$.getMeasurements.url= `${this.msApi}collections/${this.collectionId}/ms?limit=20&offset=${this.offset}`;
+          this.$.getMeasurements.generateRequest();
         }
       }
 
       _projectIdChanged(newVal, oldVal) {
         // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
+          this.offset = 0;
           this.$.getCollections.generateRequest();
         }
       }
@@ -793,8 +814,12 @@
       }
 
       measurementsHandling(data) {
+        const {summary, records} = data;
         const envElement = this._parentContainer;
-        this.measurementsRaw = this._precookMeasurements(data);
+        const {total_records, limit} = summary;
+        this.set('pagination', {total_records, limit, page: (this.offset || 0)/limit});
+        
+        this.measurementsRaw = this._precookMeasurements(records);
         const tcurrChart = this._getExistingChartMeasurements(envElement);
         this.currentChartObj = tcurrChart.currentChartObj;
         this.currChartCollections = tcurrChart.currChartCollections;
