@@ -1161,8 +1161,10 @@
         } else if (this.tabSelected === 0) {
           fids = this.selectedMeasurements.map(x => x.id);
           fmeasurements = this.measurementsRaw.filter((m) => {return fids.includes(m.id)});
-          // fmeasurements = envElement.measurementAll.subset(function (m) { return fids.includes(m.id()) });
-          // fmeasurements = fmeasurements.raw();
+
+          fmeasurements.sort(function(a,b) {
+            return fids.indexOf(b.id) - fids.indexOf(a.id);
+          });
         }
 
         this.selection = {};
