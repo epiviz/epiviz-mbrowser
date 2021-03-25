@@ -181,7 +181,7 @@
     <iron-ajax id="getMeasurements" method="POST"
       loading={{loading}}
       on-error="_errorHandler"
-      url="[[msApi]]collections/[[collectionId]]/ms?query=[[measurementsSearch]]&genome=hg19" handle-as="json"
+      handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300">
     </iron-ajax>
 
@@ -549,15 +549,24 @@
       }
 
       _generateMesurementsRequestUrl() {
-        debugger;    
         const { msApi, measurementsSearch, genome, collectionId, offset } = this;
         this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
-        let req =`${msApi}collections/${collectionId}/ms?genome=${genome}&query=${measurementsSearch || ""}&limit=20&offset=${offset}`;
+        let req =`${msApi}collections/${collectionId}/ms?genome=${genome}`;
+        if (measurementsSearch !== undefined) {
+          req +=`&query=${measurementsSearch}`;
+        }
+        if (this.pagination && this.pagination.offset !== undefined) {
+          req += `&limit=${this.pagination.offset}`;
+        }
+        if (offset !== undefined) {
+          req +=`&offset=${offset}`;
+        }
         return req;
       }
 
       _fetchMeasurements() {
         this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
+        this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
         this.$.getMeasurements.generateRequest();
       }
 
