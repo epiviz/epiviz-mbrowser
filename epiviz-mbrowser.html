@@ -548,6 +548,14 @@
         }
       }
 
+      _generateMesurementsRequestUrl() {
+        debugger;    
+        const { msApi, measurementsSearch, genome, collectionId, offset } = this;
+        this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
+        let req =`${msApi}collections/${collectionId}/ms?genome=${genome}&query=${measurementsSearch || ""}&limit=20&offset=${offset}`;
+        return req;
+      }
+
       _fetchMeasurements() {
         this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
         this.$.getMeasurements.generateRequest();
@@ -561,14 +569,16 @@
       }
 
       _measurementsSearchChanged() {
-        this.$.getMeasurements.generateRequest();
+        const measurementReq = this.$.getMeasurements;
+        this.offset = 0;
+        measurementReq.url = this._generateMesurementsRequestUrl();
+        measurementReq.generateRequest();
       }
 
       _paginationChanged(newVal, oldVal) {
         if (newVal.page !== oldVal?.page) {
           this.offset = newVal.page * newVal.limit;
-          this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
-          this.$.getMeasurements.url += `&limit=20&offset=${this.offset}`;
+          this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
         }
       }
