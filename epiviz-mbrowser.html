@@ -181,7 +181,7 @@
     <iron-ajax id="getMeasurements" method="POST"
       loading={{loading}}
       on-error="_errorHandler"
-      url="[[msApi]]collections/[[collectionId]]/ms" handle-as="json"
+      url="[[msApi]]collections/[[collectionId]]/ms?query=[[measurementsSearch]]" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300">
     </iron-ajax>
 
@@ -264,7 +264,7 @@
           <div class="scrollable">
               <div class="dialog-content">
                 <template is="dom-if" if="[[!error)]]">
-                  <data-filter pagination={{pagination}} filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
+                  <data-filter pagination={{pagination}} measurements-search={{measurementsSearch}} filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
                     selected-items="{{selectedMeasurements}}">
                   </data-filter>
                 </template>
@@ -467,6 +467,11 @@
             observer: "_paginationChanged"
           },
 
+          measurementsSearch: {
+            type: String,
+            observer: "_measurementsSearchChanged"
+          },
+
           initialLaunch: {
             type: Number,
             value: 1
@@ -556,11 +561,15 @@
         }
       }
 
+      _measurementsSearchChanged() {
+        this.$.getMeasurements.generateRequest();
+      }
+
       _paginationChanged(newVal, oldVal) {
         if (newVal.page !== oldVal?.page) {
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
-          this.$.getMeasurements.url= `${this.msApi}collections/${this.collectionId}/ms?limit=20&offset=${this.offset}`;
+          this.$.getMeasurements.url= `${this.msApi}collections/${this.collectionId}/ms?limit=20&offset=${this.offset}&query=`;
           this.$.getMeasurements.generateRequest();
         }
       }
