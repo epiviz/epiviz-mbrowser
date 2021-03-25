@@ -777,12 +777,12 @@ describe("mbrowser test", async () => {
       "collection after"
     );
     chai.assert.equalIgnoreCase(
-      "MultiStackedLineTrack",
+      "StackedBlocksTrack",
       measuremnt_data.chart_type,
       "chart type after"
     );
     chai.assert.equalIgnoreCase(
-      "Neurosphere_Cultured_Cells_Cortex_Derived H3K4me3",
+      "LHX2 enhancers",
       measuremnt_data.first_measurement_text,
       "measurement after"
     );
