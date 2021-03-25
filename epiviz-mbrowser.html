@@ -181,7 +181,7 @@
     <iron-ajax id="getMeasurements" method="POST"
       loading={{loading}}
       on-error="_errorHandler"
-      url="[[msApi]]collections/[[collectionId]]/ms?query=[[measurementsSearch]]" handle-as="json"
+      url="[[msApi]]collections/[[collectionId]]/ms?query=[[measurementsSearch]]&genome=hg19" handle-as="json"
       on-response="handleGetMeasurements" debounce-duration="300">
     </iron-ajax>
 
@@ -554,7 +554,6 @@
       }
 
       _collectionIdChanged(newVal, oldVal) {
-        // console.log('coll ID newVal, oldVal', newVal, oldVal);
         if (newVal) {
           this.offset = 0;
           this._fetchMeasurements();
@@ -569,13 +568,12 @@
         if (newVal.page !== oldVal?.page) {
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
-          this.$.getMeasurements.url= `${this.msApi}collections/${this.collectionId}/ms?limit=20&offset=${this.offset}&query=`;
+          this.$.getMeasurements.url += `&limit=20&offset=${this.offset}`;
           this.$.getMeasurements.generateRequest();
         }
       }
 
       _projectIdChanged(newVal, oldVal) {
-        // console.log('projectId changed (new/old)', newVal, oldVal);
         if (newVal) {
           this.offset = 0;
           this.$.getCollections.generateRequest();
