@@ -585,7 +585,7 @@
       }
 
       _paginationChanged(newVal, oldVal) {
-        if (newVal.page !== oldVal?.page) {
+        if (newVal.page !== (oldVal && oldVal.page)) {
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
