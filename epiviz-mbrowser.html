@@ -308,6 +308,12 @@
             value: []
           },
 
+          searchMeasurementsRaw: {
+            type: Array,
+            notify: true,
+            value: []
+          },
+
           genome: {
             type: String,
             notify: true,
@@ -846,6 +852,7 @@
         this.set('pagination', {total_records, limit, page: (this.offset || 0)/limit});
         
         this.measurementsRaw = this._precookMeasurements(records);
+        this.searchMeasurementsRaw = this.searchMeasurementsRaw.concat(this.measurementsRaw);
         const tcurrChart = this._getExistingChartMeasurements(envElement);
         this.currentChartObj = tcurrChart.currentChartObj;
         this.currChartCollections = tcurrChart.currChartCollections;
@@ -1211,7 +1218,7 @@
           fmeasurements = this.currentChartObj[fids[0]];
         } else if (this.tabSelected === 0) {
           fids = this.selectedMeasurements.map(x => x.id);
-          fmeasurements = this.measurementsRaw.filter((m) => {return fids.includes(m.id)});
+          fmeasurements = this.searchMeasurementsRaw.filter((m) => {return fids.includes(m.id)});
 
           fmeasurements.sort(function(a,b) {
             return fids.indexOf(b.id) - fids.indexOf(a.id);
