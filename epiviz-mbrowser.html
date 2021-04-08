@@ -375,7 +375,6 @@
           selectedChart: {
             type: String,
             notify: true,
-            value: "MultiStackedLineTrack",
             observer: "_refitModal",
           },
           
@@ -604,7 +603,10 @@
         if (offset !== undefined) {
           req +=`&offset=${offset}`;
         }
-
+        if (this.isChartSelectionDisabled) {
+          debugger;
+          req +=`&chart=${this.selectedChart}`;
+        }
         return req;
       }
 
@@ -820,9 +822,12 @@
         })
         this.setProperties({
           stats,
-          _charts: data.charts,
-          selectedChart: data.charts[0]
-        })
+        });
+
+        if (!this.isChartSelectionDisabled) {
+          this.set('_charts', data.charts);
+          this.set('selectedChart', data.charts[0]);
+        }
       }
 
       handleGetMeasurements(e) {
@@ -1145,7 +1150,7 @@
           fmeasurements = this.currentChartObj[fids[0]];
         } else if (this.tabSelected === 0) {
           fids = this.selectedMeasurements.map(x => x.id);
-          fmeasurements = this.searchMeasurementsRaw.filter((m) => {return fids.includes(m.id)});
+          fmeasurements = this.measurementsRaw.filter((m) => {return fids.includes(m.id)});
 
           fmeasurements.sort(function(a,b) {
             return fids.indexOf(b.id) - fids.indexOf(a.id);
