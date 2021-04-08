@@ -192,6 +192,14 @@
       url="[[msApi]]projects/[[projectId]]/add_user" handle-as="json"
       on-response="handleAddDSDBProject" debounce-duration="300">
     </iron-ajax>
+    
+    <iron-ajax id="getStats" method="GET"
+    loading={{loading}}
+    on-error="_errorHandler"
+    handle-as="json"
+    url="[[msApi]]/collections/[[collectionId]]/stats" handle-as="json"
+    on-response="handleGetStats" debounce-duration="300">
+  </iron-ajax>
 
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
@@ -272,7 +280,7 @@
           <div class="scrollable">
               <div class="dialog-content">
                 <template is="dom-if" if="[[!error)]]">
-                  <data-filter pagination={{pagination}} measurements-search={{measurementsSearch}} filters="{{filters}}" id="cardElem" data="{{_jsonMeasurements}}" class="new-charts"
+                  <data-filter pagination={{pagination}} measurements-search={{measurementsSearch}} filters="[[stats]]" filters-ext="{{filtersExt}}" id="cardElem" data="[[_jsonMeasurements]]" class="new-charts"
                     selected-items="{{selectedMeasurements}}">
                   </data-filter>
                 </template>
@@ -421,7 +429,7 @@
           _charts: {
             type: Array,
             notify: true,
-            computed: "_getCharts(_chartTypes, _parentContainer, relevantCharts)"
+            value: [],
           },
 
           /**
@@ -507,7 +515,12 @@
           userToken: {
             type: String,
             notify: true
-          }
+          },
+
+          filtersExt: {
+            type: Array,
+            observer: "_filterExtChanged"
+          },
         }
       }
 
@@ -531,8 +544,36 @@
         ));
       }
 
+      _getSanitizeItemName(name) {
+          return name.replace("annotation.", "")
+      }
+
       _getFilters(filters){
-        return {filter_by:[]};
+        const emptyFilter = {filter_by:[]};
+        if (!this.stats) {
+          return emptyFilter;
+        }
+        
+        if (filters != undefined) {
+          const filtersList = [];
+          Object.keys(filters).forEach(it => {
+            if (this.filtersExt[it].length == 0) {
+              return;//continue
+            }
+            const filter = this.stats.find(filter => filter.name === it)
+
+            filtersList.push({
+              name: this._getSanitizeItemName(it),
+              type: filter.type,
+              values: this.filtersExt[it].reduce((acc, filter) => {
+                acc[filter] = null;
+                return acc;
+              }, {}),
+            });
+          })
+          return {filter_by: filtersList};
+        }
+        return emptyFilter;
       }
 
       disconnectedCallback() {
@@ -554,18 +595,14 @@
 
         return this._tableDataExists(ms);
       }
-
+ 
       _selectedMeasurementsObserver(newVal, oldVal) {
         this.set('isChartSelectionDisabled', (newVal && newVal.length > 0));
-        if (!this.isChartSelectionDisabled) {
-          this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
-          this.chooseChartType();
-        }
       }
 
       _generateMesurementsRequestUrl() {
         const { msApi, measurementsSearch, genome, collectionId, offset } = this;
-        this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
+        this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filtersExt));
         let req =`${msApi}collections/${collectionId}/ms?genome=${genome}`;
         if (measurementsSearch !== undefined) {
           req +=`&query=${measurementsSearch}`;
@@ -576,11 +613,12 @@
         if (offset !== undefined) {
           req +=`&offset=${offset}`;
         }
+
         return req;
       }
 
       _fetchMeasurements() {
-        this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filters));
+        this.$.getMeasurements.body= JSON.stringify(this._getFilters({}));
         this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
         this.$.getMeasurements.generateRequest();
       }
@@ -589,12 +627,14 @@
         if (newVal) {
           this.offset = 0;
           this._fetchMeasurements();
+          this.$.getStats.generateRequest();
         }
       }
 
-      _measurementsSearchChanged() {
+      _measurementsSearchChanged(newVal, oldVal) {
         const measurementReq = this.$.getMeasurements;
         this.offset = 0;
+        this.collectionId = newVal;
         measurementReq.url = this._generateMesurementsRequestUrl();
         measurementReq.generateRequest();
       }
@@ -604,6 +644,21 @@
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
+        }
+      }
+
+      _filterExtChanged(newVal, oldVal) {
+        if (this.collectionId) {
+          this.offset = 0;
+          this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
+          this.$.getMeasurements.generateRequest();
+        }
+      }
+
+      _filterChanged(newVal, oldVal) {
+        if (newVal && Object.keys(newVal).length === 0 && newVal.constructor === Object //check newVal = {}
+        && oldVal === undefined) {
+          return;
         }
       }
 
@@ -705,20 +760,16 @@
         const collections = data;
         const collectionsObj = {};
 
-        // if (!self.collectionsObj) {
-        //   self.collectionsObj = {};
-        // }
-
         data.forEach((it) => {
           if(!it.genomes.includes(this.genome)  && !self.autoOpen) {
-            return ;//skip;
+            return ;
           }
           collectionsObj[it.collection_id] = it;
-          // self.collectionsObj[it.collection_id] = it;
         });
 
         self.setProperties({
           collectionsObj: collectionsObj,
+          filtersExt: [],
         });
 
         if(self.initialLaunch == 1 && self.autoOpen) {
@@ -770,17 +821,22 @@
         }
       }
 
+      handleGetStats(e){
+        const data = e.detail.response;
+        const stats = data.stats.map(it => {
+          it.values = Object.keys(it.values);
+          return it;
+        })
+        this.setProperties({
+          stats,
+          _charts: data.charts,
+          selectedChart: data.charts[0]
+        })
+      }
+
       handleGetMeasurements(e) {
         const data = e.detail.response;
         this.measurementsHandling(data);
-
-        if (this.selectedMeasurements && this.selectedMeasurements.length > 0) {
-          this.set('relevantCharts', [this.selectedChart]);
-        } else {
-          this.set('relevantCharts', this._relevantCharts(this.measurementsRaw));
-        }
-       
-        this.chooseChartType();
         this.initialLaunch++;
       }
 
@@ -867,17 +923,12 @@
         const envElement = this._parentContainer;
         const {total_records, limit} = summary;
         this.set('pagination', {total_records, limit, page: (this.offset || 0)/limit});
-        
         this.measurementsRaw = this._precookMeasurements(records);
         this.searchMeasurementsRaw = this.searchMeasurementsRaw.concat(this.measurementsRaw);
         const tcurrChart = this._getExistingChartMeasurements(envElement);
         this.currentChartObj = tcurrChart.currentChartObj;
         this.currChartCollections = tcurrChart.currChartCollections;
 
-        for (let k in this.filters) {
-          this.filters[k] = [];
-        }
-        this.set("filters", this.filters);
         this._updateMeasurementView();
 
         this.$.modal.refit();
@@ -988,8 +1039,7 @@
         this.selection.chartType = this.selectedChart;
         this.measurements = this.measurementsRaw;
 
-        data = this._filterMeasurements(this.selection.chartType, this.measurements);
-        const nData = this._clearMeasurementsData(data, this.genome);
+        const nData = this._clearMeasurementsData(this.measurements, this.genome);
 
         this.set("_jsonMeasurements", nData);
         this.$.modal.refit();
@@ -1024,23 +1074,8 @@
         return clearedMeasurements;
       }
 
-      /**
-       * Get Available Chart Types
-       */
-      _getCharts(chartTypes, parentContainer, relevantCharts) {
-        if (parentContainer && parentContainer.nodeName === "EPIVIZ-NAVIGATION") {
-          delete chartTypes["EpivizNavigation"];
-        }
-
-        if (relevantCharts) {
-          return relevantCharts;
-        }
-        return Object.keys(chartTypes);
-      }
-
       _isEnvironment(chartTypes) {
         return false;
-        //chartTypes.indexOf("EpivizNavigation") !== -1;
       }
 
       _tableDataExists(tableData) {
