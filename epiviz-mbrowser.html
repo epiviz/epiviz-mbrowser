@@ -602,6 +602,7 @@
       _generateMesurementsRequestUrl() {
         const { msApi, measurementsSearch, genome, collectionId, offset } = this;
         this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filtersExt));
+        debugger;
         let req =`${msApi}collections/${collectionId}/ms?genome=${genome}`;
         if (measurementsSearch !== undefined) {
           req +=`&query=${measurementsSearch}`;
@@ -635,7 +636,6 @@
       _measurementsSearchChanged(newVal, oldVal) {
         const measurementReq = this.$.getMeasurements;
         this.offset = 0;
-        this.collectionId = newVal;
         measurementReq.url = this._generateMesurementsRequestUrl();
         measurementReq.generateRequest();
       }
