@@ -604,7 +604,6 @@
           req +=`&offset=${offset}`;
         }
         if (this.isChartSelectionDisabled) {
-          debugger;
           req +=`&chart=${this.selectedChart}`;
         }
         return req;
@@ -634,14 +633,26 @@
 
       _paginationChanged(newVal, oldVal) {
         if (newVal.page !== (oldVal && oldVal.page)) {
+          debugger;
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
         }
       }
 
+      _emptyObj(obj) {
+        if (!obj) {
+          return true;
+        }
+        return Object.keys(obj).length === 0 && obj.constructor === Object;
+      }
+
       _filterExtChanged(newVal, oldVal) {
+        if (this._emptyObj(newVal), this._emptyObj(oldVal)){
+          return ;
+        }
         if (this.collectionId) {
+          debugger;
           this.offset = 0;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
@@ -762,7 +773,7 @@
 
         self.setProperties({
           collectionsObj: collectionsObj,
-          filtersExt: [],
+          // filtersExt: {},
         });
 
         if(self.initialLaunch == 1 && self.autoOpen) {
@@ -831,6 +842,7 @@
       }
 
       handleGetMeasurements(e) {
+        debugger;
         const data = e.detail.response;
         this.measurementsHandling(data);
         this.initialLaunch++;
