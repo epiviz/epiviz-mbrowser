@@ -280,7 +280,9 @@
           <div class="scrollable">
               <div class="dialog-content">
                 <template is="dom-if" if="[[!error)]]">
-                  <data-filter pagination={{pagination}} measurements-search={{measurementsSearch}} filters="[[stats]]" filters-ext="{{filtersExt}}" id="cardElem" data="[[_jsonMeasurements]]" class="new-charts"
+                  <data-filter pagination={{pagination}} measurements-search={{measurementsSearch}} 
+                    filters="[[stats]]" stats="[[stats]]" filters-ext="{{filtersExt}}"
+                    id="cardElem" data="[[_jsonMeasurements]]" class="new-charts"
                     selected-items="{{selectedMeasurements}}">
                   </data-filter>
                 </template>
@@ -383,7 +385,7 @@
           selectedChart: {
             type: String,
             notify: true,
-            observer: "_refitModal",
+            observer: "_selectedChartChanged",
           },
           
           isChartSelectionDisabled: {
@@ -518,7 +520,8 @@
 
           filtersExt: {
             type: Array,
-            observer: "_filterExtChanged"
+            observer: "_filterExtChanged",
+            notify: true
           },
         }
       }
@@ -566,8 +569,8 @@
               type: filter.type,
               values: this.filtersExt[it].reduce((acc, filter) => {
                 acc[filter] = null;
-                return acc;
-              }, {}),
+                return Object.keys(acc);
+              }, []),
             });
           })
           return {filter_by: filtersList};
@@ -602,7 +605,6 @@
       _generateMesurementsRequestUrl() {
         const { msApi, measurementsSearch, genome, collectionId, offset } = this;
         this.$.getMeasurements.body= JSON.stringify(this._getFilters(this.filtersExt));
-        debugger;
         let req =`${msApi}collections/${collectionId}/ms?genome=${genome}`;
         if (measurementsSearch !== undefined) {
           req +=`&query=${measurementsSearch}`;
@@ -613,36 +615,50 @@
         if (offset !== undefined) {
           req +=`&offset=${offset}`;
         }
-        if (this.isChartSelectionDisabled) {
+        if (this.selectedChart) {
           req +=`&chart=${this.selectedChart}`;
         }
         return req;
       }
 
       _fetchMeasurements() {
-        this.$.getMeasurements.body= JSON.stringify(this._getFilters({}));
-        this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
-        this.$.getMeasurements.generateRequest();
+        if (this.selectedChart) {
+          this.$.getMeasurements.body= JSON.stringify(this._getFilters({}));
+          this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
+          this.$.getMeasurements.generateRequest();
+        }
       }
 
       _collectionIdChanged(newVal, oldVal) {
         if (newVal) {
           this.offset = 0;
+          this.filtersExt = {};
+          this.measurementsSearch = "";
           this._fetchMeasurements();
           this.$.getStats.generateRequest();
         }
       }
 
+      _selectedChartChanged(newVal, oldVal) {
+        if (newVal) {
+          this.offset = 0;
+          this.measurementsSearch = "";
+          // this.filtersExt = {};
+          this._fetchMeasurements();
+        }
+      }
+
       _measurementsSearchChanged(newVal, oldVal) {
-        const measurementReq = this.$.getMeasurements;
-        this.offset = 0;
-        measurementReq.url = this._generateMesurementsRequestUrl();
-        measurementReq.generateRequest();
+        if (oldVal != undefined && newVal != oldVal) {
+          const measurementReq = this.$.getMeasurements;
+          this.offset = 0;
+          measurementReq.url = this._generateMesurementsRequestUrl();
+          measurementReq.generateRequest();
+        }
       }
 
       _paginationChanged(newVal, oldVal) {
-        if (newVal.page !== (oldVal && oldVal.page)) {
-          debugger;
+        if (oldVal && newVal.page !== (oldVal && oldVal.page)) {
           this.offset = newVal.page * newVal.limit;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
@@ -657,11 +673,11 @@
       }
 
       _filterExtChanged(newVal, oldVal) {
+        console.log("mbrowser filters Ext changed");
         if (this._emptyObj(newVal), this._emptyObj(oldVal)){
           return ;
         }
         if (this.collectionId) {
-          debugger;
           this.offset = 0;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
           this.$.getMeasurements.generateRequest();
@@ -851,7 +867,6 @@
       }
 
       handleGetMeasurements(e) {
-        debugger;
         const data = e.detail.response;
         this.measurementsHandling(data);
         this.initialLaunch++;
