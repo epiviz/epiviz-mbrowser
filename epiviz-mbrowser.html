@@ -185,6 +185,14 @@
       on-response="handleGetMeasurements" debounce-duration="300">
     </iron-ajax>
 
+    <iron-ajax id="addUser"
+      loading={{loading}}
+      on-error="_errorHandler"
+      method="PUT"
+      url="[[msApi]]projects/[[projectId]]/add_user" handle-as="json"
+      on-response="handleAddDSDBProject" debounce-duration="300">
+    </iron-ajax>
+
     <template is="dom-if" if="{{!_isEnvironment(_charts)}}">
       <div class="buttonContainer">
         <paper-button raised on-tap="_showModal">
@@ -1157,17 +1165,45 @@
         this.set("error", false);
 
         if (this.user != "undefined" && this.userToken != "undefined") {
-          var ajaxElem = this.$.getProjects;
-          if (this.userToken && this.userToken != "undefined") {
-            ajaxElem.headers = {"Authorization": "Bearer " + this.userToken};
-          }
-          ajaxElem.generateRequest();
+          this.openProject(this.projectId);
+        }
+      }
+
+      handleAddDSDBProject(e) {
+        var self = this;
+        this.autoOpen = true;
+        this.set("error", false);
+        const data = e.detail.response;
+
+        var ajaxElem = this.$.getProjects;
+        if (this.userToken && this.userToken != "undefined") {
+          ajaxElem.headers = {"Authorization": "Bearer " + this.userToken};
+        }
+
+        ajaxElem.generateRequest();
+
+        this.$.modal.open();
+        this.$.modal.refit();
+
+        if(this.shadowRoot.querySelector("#cardElem")) {
+            this.shadowRoot.querySelector("#cardElem")._selected = {};
+            this.shadowRoot.querySelector("#cardElem").filters = this.filters;
         }
       }
 
       openProject(project) {
         this.autoOpen = true;
         this.set("error", false);
+
+        if (project.startsWith("DS")){
+          this.set("projectId", project);
+          var ajaxElem = this.$.addUser;
+          
+          if (this.userToken && this.userToken != "undefined") {
+            ajaxElem.headers = {"Authorization": "Bearer " + this.userToken};
+            ajaxElem.generateRequest();
+          }
+        }
 
         var ajaxElem = this.$.getProjects;
         if (this.userToken && this.userToken != "undefined") {
@@ -1237,7 +1273,7 @@
           fmeasurements = this.searchMeasurementsRaw.filter((m) => {return fids.includes(m.id)});
 
           fmeasurements.sort(function(a,b) {
-            return fids.indexOf(b.id) - fids.indexOf(a.id);
+            return fids.indexOf(a.id) - fids.indexOf(b.id);
           });
         }
 
