@@ -857,7 +857,7 @@
           return it;
         })
         this.setProperties({
-          stats,
+          stats: stats
         });
 
         if (!this.isChartSelectionDisabled) {
@@ -1337,7 +1337,7 @@
           fmeasurements = this.currentChartObj[fids[0]];
         } else if (this.tabSelected === 0) {
           fids = this.selectedMeasurements.map(x => x.id);
-          fmeasurements = this.measurementsRaw.filter((m) => {return fids.includes(m.id)});
+          fmeasurements = this.searchMeasurementsRaw.filter((m) => {return fids.includes(m.id)});
 
           fmeasurements.sort(function(a,b) {
             return fids.indexOf(a.id) - fids.indexOf(b.id);
