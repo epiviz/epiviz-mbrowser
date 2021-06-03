@@ -567,10 +567,7 @@
             filtersList.push({
               name: this._getSanitizeItemName(it),
               type: filter.type,
-              values: this.filtersExt[it].reduce((acc, filter) => {
-                acc[filter] = null;
-                return Object.keys(acc);
-              }, []),
+              values: this.filtersExt[it],
             });
           })
           return {filter_by: filtersList};
@@ -674,9 +671,14 @@
 
       _filterExtChanged(newVal, oldVal) {
         console.log("mbrowser filters Ext changed");
-        if (this._emptyObj(newVal), this._emptyObj(oldVal)){
-          return ;
+        // if (this._emptyObj(newVal)){
+        //   return ;
+        // }
+
+        if (_.isEqual(newVal, oldVal)) {
+          return;
         }
+
         if (this.collectionId) {
           this.offset = 0;
           this.$.getMeasurements.url = this._generateMesurementsRequestUrl();
