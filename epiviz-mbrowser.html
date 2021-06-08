@@ -1233,7 +1233,7 @@
       _userChanged(user, userToken) {
         this.set("error", false);
 
-        if (this.user != "undefined" && this.userToken != "undefined") {
+        if (this.user != "undefined" && this.userToken != "undefined" && this.projectId) {
           this.openProject(this.projectId);
         }
       }
